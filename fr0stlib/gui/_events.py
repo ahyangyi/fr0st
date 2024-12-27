@@ -23,15 +23,17 @@ import sys, wx, time, threading
 
 myEVT_THREAD_MESSAGE = wx.NewEventType()
 EVT_THREAD_MESSAGE = wx.PyEventBinder(myEVT_THREAD_MESSAGE, 1)
+
+
 class ThreadMessageEvent(wx.PyCommandEvent):
     """Used to send information to a callback function in the main thread.
 
     Should have an id if the receiving widget has more than 1 handler. Can
     carry arbitrary information accessible through e.Args."""
+
     def __init__(self, id=wx.ID_ANY, *args):
         wx.PyCommandEvent.__init__(self, myEVT_THREAD_MESSAGE, id)
         self.Args = args
-
 
 
 __ID = wx.NewId()
@@ -44,16 +46,18 @@ def InMain(f):
     The thread in which the function is called waits on the result, so the code
     can be reasoned about as if it was single-threaded. Exceptions are also
     raised in the original thread."""
+
     def inner(*a, **k):
-        if threading.currentThread().name == 'MainThread':
+        if threading.currentThread().name == "MainThread":
             return f(*a, **k)
         res = []
         wx.PostEvent(wx.GetApp(), ThreadMessageEvent(__ID, res, f, a, k))
         while not res:
-            time.sleep(.0001)
+            time.sleep(0.0001)
         if len(res) == 3:
-            raise res[0], res[1], res[2]
+            raise Exception(res[0], res[1], res[2])
         return res[0]
+
     return inner
 
 
@@ -62,12 +66,14 @@ def InMainFast(f):
 
     There are no guarantees when and in which thread the function runs, only
     that it eventually does. The return value may be ignored."""
-    if 'win' in sys.platform:
+    if "win" in sys.platform:
         # wx is threadsafe on windows. This shortcut is not in InMain, because
         # said function gives stronger guarantees about its exact behaviour.
         return f
+
     def inner(*a, **k):
         wx.PostEvent(wx.GetApp(), ThreadMessageEvent(__ID_fast, f, a, k))
+
     return inner
 
 
@@ -88,4 +94,5 @@ def InMainSetup(__init__):
         __init__(self, *a, **k)
         self.Bind(EVT_THREAD_MESSAGE, __callback, id=__ID)
         self.Bind(EVT_THREAD_MESSAGE, __callback_fast, id=__ID_fast)
+
     return inner

@@ -24,7 +24,8 @@ from math import log10
 
 
 def percent2log(prc):
-    return 10.0 ** (-log10(1.0/prc)/log10(2.0))
+    return 10.0 ** (-log10(1.0 / prc) / log10(2.0))
+
 
 def log2percent(logval):
     return 2.0 ** log10(logval) if logval else 0.0
@@ -32,16 +33,15 @@ def log2percent(logval):
 
 def compatibilize(flame, version):
     oldversion = getattr(flame, "version", "").lower()
-    if not (oldversion.startswith("fr0st") or
-            re.match("flam3.*2\.8", oldversion)):
+    if not (oldversion.startswith("fr0st") or re.match("flam3.*2\.8", oldversion)):
         # Assume the flame is compatible with apo and flam3 < 2.8
         apo2fr0st(flame)
     flame.version = version
-    
+
 
 def apo2fr0st(flame):
-    """Convert all attributes to be compatible with flam3 2.8."""   
-    for x in flame.iter_xforms():      
+    """Convert all attributes to be compatible with flam3 2.8."""
+    for x in flame.iter_xforms():
         # Symmetry is deprecated, so we factor it into the equivalent attrs.
         if hasattr(x, "symmetry"):
             x.color_speed = (1 - x.symmetry) / 2.0
@@ -55,13 +55,13 @@ def apo2fr0st(flame):
         if hasattr(x, "plotmode") and x.plotmode.lower() == "off":
             x.opacity = 0.0
             del x.plotmode
-    
+
     # neither was soloxform
     if hasattr(flame, "soloxform"):
         for x in flame.xform:
             x.opacity = float(x.index == flame.soloxform)
         del flame.soloxform
-         
+
     # zoom is deprecated, so scale is adjusted by the zoom value
     if hasattr(flame, "zoom"):
         flame.scale *= 2**flame.zoom

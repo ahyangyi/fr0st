@@ -34,11 +34,10 @@ class MyFileHistory(wx.FileHistory):
         self.n = n
 
         self.id = NewIdRange(n)
-        
-        wx.FileHistory.__init__(self, n, idBase=self.id)
-        map(self.AddFileToHistory, reversed(config[configname]))
-        self.BindMenu(parent)
 
+        wx.FileHistory.__init__(self, n, idBase=self.id)
+        list(map(self.AddFileToHistory, reversed(config[configname])))
+        self.BindMenu(parent)
 
     def BindMenu(self, parent, menuindex=0, pos=2):
         menu = parent.menu.GetMenu(menuindex)
@@ -47,14 +46,17 @@ class MyFileHistory(wx.FileHistory):
         menu.InsertMenu(pos, -1, "Recent &Files", recent)
         self.UseMenu(recent)
         self.AddFilesToThisMenu(recent)
-        parent.Bind(wx.EVT_MENU_RANGE, partial(self.OnHistory, parent),
-                    id=self.id, id2=self.id + self.n)
-        
+        parent.Bind(
+            wx.EVT_MENU_RANGE,
+            partial(self.OnHistory, parent),
+            id=self.id,
+            id2=self.id + self.n,
+        )
 
     def SaveToConfig(self):
-        config[self.configname] = tuple(self.GetHistoryFile(i)
-                                        for i in range(self.GetCount()))
-
+        config[self.configname] = tuple(
+            self.GetHistoryFile(i) for i in range(self.GetCount())
+        )
 
     def OnHistory(self, parent, e):
         index = e.GetId() - self.id

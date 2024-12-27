@@ -27,7 +27,7 @@ from fr0stlib.gui.config import config
 from fr0stlib.gui._events import InMainFast
 
 
-class Renderer():
+class Renderer:
     def __init__(self, parent):
         self.parent = parent
         self.thumbqueue = []
@@ -40,7 +40,6 @@ class Renderer():
         self.RenderLoop()
         self.bgRenderLoop()
 
-
     def ThumbnailRequest(self, callback, *args, **kwds):
         """Schedules a thumbnail to be rendered."""
         # These settings are hardcoded on purpose, they can't be overridden
@@ -48,9 +47,8 @@ class Renderer():
         kwds["nthreads"] = 1
         kwds["fixed_seed"] = True
         kwds["renderer"] = "flam3"
-        
-        self.thumbqueue.append((callback,args,kwds))
 
+        self.thumbqueue.append((callback, args, kwds))
 
     def PreviewRequest(self, callback, *args, **kwds):
         """Schedules a render immediately after the current render is done.
@@ -59,10 +57,9 @@ class Renderer():
         kwds["fixed_seed"] = True
         kwds["renderer"] = "flam3"
         self.previewflag = 1
-        
-        self.previewqueue = [(callback,args,kwds)]
 
-        
+        self.previewqueue = [(callback, args, kwds)]
+
     def LargePreviewRequest(self, callback, *args, **kwds):
         """Makes a preview request with a progress function."""
         prog_func = kwds["progress_func"]
@@ -70,8 +67,7 @@ class Renderer():
         kwds["renderer"] = kwds.get("renderer", config["renderer"])
         self.previewflag = 1
 
-        self.largepreviewqueue = [(callback,args,kwds)]
-
+        self.largepreviewqueue = [(callback, args, kwds)]
 
     def RenderRequest(self, callback, *args, **kwds):
         """Makes a render request run in a different thread than previews,
@@ -80,22 +76,19 @@ class Renderer():
         kwds["progress_func"] = self.prog_wrapper(prog_func, "bgflag")
         kwds["renderer"] = kwds.get("renderer", config["renderer"])
 
-        self.bgqueue.append((callback,args,kwds))
-        
+        self.bgqueue.append((callback, args, kwds))
 
     @Threaded
     def RenderLoop(self):
         while not self.exitflag:
-            queue = (self.previewqueue or self.thumbqueue 
-                     or self.largepreviewqueue)
+            queue = self.previewqueue or self.thumbqueue or self.largepreviewqueue
             if queue:
-                self.bgflag = 2 # Pauses the other thread
+                self.bgflag = 2  # Pauses the other thread
                 self.previewflag = 0
                 self.process(*queue.pop(0))
                 self.bgflag = 0
             else:
-                time.sleep(.01)  # Ideal interval needs to be tested
-
+                time.sleep(0.01)  # Ideal interval needs to be tested
 
     @Threaded
     def bgRenderLoop(self):
@@ -104,19 +97,17 @@ class Renderer():
             if queue:
                 self.process(*queue.pop(0))
             else:
-                time.sleep(.01)
+                time.sleep(0.01)
 
-
-    @Catches(wx.PyDeadObjectError)
     def process(self, callback, args, kwds):
         cancel_func = kwds.pop("cancel_func", None)
         renderer = kwds.pop("renderer")
         try:
             render = render_funcs[renderer]
         except KeyError as e:
-            raise ValueError("Invalid renderer: %s" %e.args)
+            raise ValueError("Invalid renderer: %s" % e.args)
         try:
-            output_buffer = render(*args,**kwds)
+            output_buffer = render(*args, **kwds)
         except Exception:
             # Make sure render thread never crashes due to malformed flames.
             traceback.print_exc()
@@ -128,23 +119,23 @@ class Renderer():
             cancel_func()
             return
 
-        if renderer == 'flam4':
+        if renderer == "flam4":
             channels = 4
         else:
-            channels = kwds.get('transparent', False) + 3
+            channels = kwds.get("transparent", False) + 3
         # args[1] is always size...
         self.OnImageReady(callback, args[1], output_buffer, channels)
-        
 
     def prog_wrapper(self, f, flag):
         @Catches(TypeError)
         def prog_func(*args):
             return self.exitflag or f(*args) or getattr(self, flag)
+
         return prog_func
 
-
     @InMainFast
-    def OnImageReady(self, callback, (w,h), output_buffer, channels):
+    def OnImageReady(self, callback, xxx_todo_changeme, output_buffer, channels):
+        (w, h) = xxx_todo_changeme
         if channels == 3:
             fun = wx.BitmapFromBuffer
         elif channels == 4:

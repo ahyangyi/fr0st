@@ -30,8 +30,9 @@ def interrupt(thread, exctype=ThreadInterrupt):
     """Raises an exception in a thread"""
     if not inspect.isclass(exctype):
         raise TypeError("Only types can be raised (not instances)")
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(thread.ident),
-                                                     ctypes.py_object(exctype))
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(
+        ctypes.c_long(thread.ident), ctypes.py_object(exctype)
+    )
     # res 0 means the thread doesn't exist (or has already finished)
     # res 1 is expected exit status.
     if res > 1:
@@ -46,7 +47,7 @@ def interruptall(name=None, exctype=ThreadInterrupt):
     If no name is given, all threads other than the caller are interrupted."""
     for thread in threading.enumerate():
         if name and thread.name != name:
-            continue        
+            continue
         if thread is threading.currentThread():
             continue
         interrupt(thread, exctype)

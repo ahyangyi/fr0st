@@ -28,22 +28,25 @@ import fr0stlib
 
 def export_src(version, path):
     # setup and invoke bzr export
-    tempdir = os.path.join(path, "fr0st-%s-src" %version)
+    tempdir = os.path.join(path, "fr0st-%s-src" % version)
     if not os.path.exists(tempdir):
         os.makedirs(tempdir)
 
-    os.system("bzr export %s" %tempdir)
+    os.system("bzr export %s" % tempdir)
 
     # make the tarfile
-    excludes = ['export_src.py',
-                'setup_py2exe.py',
-                'setup_py2exe_step2.py',
-                os.path.join('fr0stlib', 'tests'),
-                'Microsoft.VC90.CRT']
+    excludes = [
+        "export_src.py",
+        "setup_py2exe.py",
+        "setup_py2exe_step2.py",
+        os.path.join("fr0stlib", "tests"),
+        "Microsoft.VC90.CRT",
+    ]
+
     def exclude(path):
         return os.path.relpath(path, tempdir) in excludes
 
-    tar = TarFile.open(tempdir + '.tgz', mode='w:gz')
+    tar = TarFile.open(tempdir + ".tgz", mode="w:gz")
     tar.add(tempdir, arcname=os.path.basename(tempdir), exclude=exclude)
     tar.close()
 
@@ -52,7 +55,7 @@ def export_src(version, path):
 
 
 version = fr0stlib.VERSION.split()[1]
-release_dir = os.path.join('..', 'releases', version)
+release_dir = os.path.join("..", "releases", version)
 if not os.path.exists(release_dir):
     os.makedirs(release_dir)
 

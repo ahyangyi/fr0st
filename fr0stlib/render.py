@@ -27,9 +27,11 @@ from fr0stlib import Flame
 from fr0stlib.pyflam3 import Genome
 
 
-types = {".bmp": wx.BITMAP_TYPE_BMP,
-         ".png": wx.BITMAP_TYPE_PNG,
-         ".jpg": wx.BITMAP_TYPE_JPEG}
+types = {
+    ".bmp": wx.BITMAP_TYPE_BMP,
+    ".png": wx.BITMAP_TYPE_PNG,
+    ".jpg": wx.BITMAP_TYPE_JPEG,
+}
 
 
 def save_image(path, img, jpg_quality=95):
@@ -46,11 +48,11 @@ def save_image(path, img, jpg_quality=95):
 
 def needs_conversion(string):
     root = etree.fromstring(string)
-    return root.get('version', None) != fr0stlib.VERSION
+    return root.get("version", None) != fr0stlib.VERSION
 
 
 def to_string(flame):
-    if isinstance(flame, basestring):
+    if isinstance(flame, str):
         if needs_conversion(flame):
             return Flame(flame).to_string()
         return flame
@@ -62,16 +64,16 @@ def flam3_render(flame, size, quality, transparent=0, **kwds):
     frame = Genome.load(to_string(flame), **kwds)
     output_buffer, stats = frame.render(size, quality, transparent)
     return output_buffer
-    
+
 
 def flam4_render(flame, size, quality, **kwds):
     """Passes requests on to flam4. Works on windows only for now."""
     from fr0stlib.pyflam3 import _flam4
-    flame = flame if type(flame) is Flame else Flame(flame)
+
+    flame = flame if isinstance(flame, Flame) else Flame(flame)
     flam4Flame = _flam4.loadFlam4(flame)
     output_buffer = _flam4.renderFlam4(flam4Flame, size, quality, **kwds)
     return output_buffer
 
 
-render_funcs = {'flam3': flam3_render,
-                'flam4': flam4_render}
+render_funcs = {"flam3": flam3_render, "flam4": flam4_render}

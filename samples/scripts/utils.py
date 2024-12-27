@@ -5,6 +5,7 @@ from other scripts, through the standard python import mechanism.
 
 import itertools, fr0stlib
 
+
 def calculate_colors(xforms):
     """Distribute color values evenly among xforms. You can pass the entire
     xform list as an argument, or just a slice of it."""
@@ -19,7 +20,7 @@ def normalize_weights(flame, norm=1.0):
     for xf in flame.xform:
         xf.weight /= ws
 
-        
+
 def batch(func, nflames, *a, **k):
     """Takes a flame-generating function, and calls it multiple
     times to generate a batch."""
@@ -33,11 +34,9 @@ def batch(func, nflames, *a, **k):
 
 
 def animation_preview(flames, repeat=True):
-    """ animate flames in an infinite loop."""
-    assert fr0stlib.GUI # guard against command line scripts.
+    """animate flames in an infinite loop."""
+    assert fr0stlib.GUI  # guard against command line scripts.
     itr = itertools.cycle(flames) if repeat else flames
     for f in itr:
         fr0stlib.preview(f)
-        fr0stlib.show_status("previewing %s" %f)
-
-               
+        fr0stlib.show_status("previewing %s" % f)

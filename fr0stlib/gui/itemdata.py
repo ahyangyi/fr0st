@@ -29,30 +29,25 @@ class ParentData(object):
         self.imgindex = 0
 
 
-class ItemData(list):  
+class ItemData(list):
     def __init__(self, s):
-        self.append(s if isinstance(s, basestring) else s.to_string())
+        self.append(s if isinstance(s, str) else s.to_string())
         self.redo = []
         self.UpdateName()
         self.imgindex = -1
-        
 
-    def append(self,v):
-        list.append(self,v)
+    def append(self, v):
+        list.append(self, v)
         self.redo = []
-
 
     def HasChanged(self):
         return self.undo
 
-
     def Reset(self):
         del self[:-1], self.redo[:]
 
-
     def UpdateName(self):
         self._name = re.search(' name="(.*?)"', self[-1]).group(1)
-
 
     def Undo(self):
         if self.undo:
@@ -60,21 +55,18 @@ class ItemData(list):
             self.UpdateName()
             return self[-1]
 
-
     def UndoAll(self):
         if self.undo:
             self.redo.extend(reversed(self[1:]))
             del self[1:]
             self.UpdateName()
             return self[-1]
-        
 
     def Redo(self):
         if self.redo:
-            list.append(self,self.redo.pop())
+            list.append(self, self.redo.pop())
             self.UpdateName()
             return self[-1]
-
 
     def RedoAll(self):
         if self.redo:
@@ -83,15 +75,14 @@ class ItemData(list):
             self.UpdateName()
             return self[-1]
 
-
     @property
     def undo(self):
         return len(self) - 1
 
-
     @property
     def name(self):
-        return ('* ' if self.undo else '') + self._name
+        return ("* " if self.undo else "") + self._name
+
     @name.setter
     def name(self, v):
         self._name = v

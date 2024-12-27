@@ -1,10 +1,11 @@
-''' "It's aliiiiive!" he screamed, as the rotating sheep
-mutated in realtime before his very eyes.'''
+""" "It's aliiiiive!" he screamed, as the rotating sheep
+mutated in realtime before his very eyes."""
 
 import time
 
 from fr0stlib.gui._events import InMain
 from fr0stlib.gui.constants import ID
+
 
 def ScriptHack(func):
     # First, hack our way around some "limitations". I want to keep
@@ -35,13 +36,14 @@ def ScriptHack(func):
 def rotate_sheep(f, rot):
     for x in f.xform:
         if x.animate:
-            x.rotate(rot)    
+            x.rotate(rot)
+
 
 def main():
     """This is the actual script."""
     rot = 0
     while True:
-        rot = (rot-3) % 360
+        rot = (rot - 3) % 360
         f = _self.flame.copy()
         rotate_sheep(f, rot)
         preview(f)

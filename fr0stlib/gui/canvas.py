@@ -36,10 +36,10 @@ def angle_helper(*points):
     """Given 3 vectors with the same origin, checks if the first falls
     between the other 2."""
     itr = (polar(i)[1] for i in points)
-    vect = itr.next() # vector being checked
-    low, high = sorted(itr) # the 2 triangle legs.
+    vect = next(itr)  # vector being checked
+    low, high = sorted(itr)  # the 2 triangle legs.
     if high - low > 180:
-        low, high = high-360, low
+        low, high = high - 360, low
     if vect > high:
         vect -= 360
     return high > vect > low
@@ -55,17 +55,21 @@ class VarPreview(object):
 
         kwds = config["Xform-Preview-Settings"].copy()
         depth = kwds.pop("depth")
-        self.objects = [FC.PointSet(self.var_preview(depth=i + 1, **kwds), 
-                                    Color=tuple(c/(depth - i) for c in Color))
-                        for i in range(depth)]
+        self.objects = [
+            FC.PointSet(
+                self.var_preview(depth=i + 1, **kwds),
+                Color=tuple(c / (depth - i) for c in Color),
+            )
+            for i in range(depth)
+        ]
 
     def var_preview(self, range, numvals, depth):
         numvals = int(numvals * range)
-        result = (c_double * (2* (2*numvals+1)**2))()
-        flam3_xform_preview(self.genome, self.index, range, numvals, depth,
-                            result, RandomContext())
-        return [(x,-y) for x,y in zip(*[iter(result)]*2)]
-
+        result = (c_double * (2 * (2 * numvals + 1) ** 2))()
+        flam3_xform_preview(
+            self.genome, self.index, range, numvals, depth, result, RandomContext()
+        )
+        return [(x, -y) for x, y in zip(*[iter(result)] * 2)]
 
 
 class AlphaPolygon(FC.Polygon):
@@ -73,18 +77,17 @@ class AlphaPolygon(FC.Polygon):
 
     Similar to what's described here:
     http://trac.paulmcnett.com/floatcanvas/wiki/AlphaCircle."""
+
     def __init__(self, *a, **k):
-        self.Opacity = k.pop('Opacity', 0)
+        self.Opacity = k.pop("Opacity", 0)
         FC.Polygon.__init__(self, *a, **k)
 
-
     def SetBrush(self, FillColor, FillStyle):
-        r,g,b = FillColor
-        c = wx.Colour(r,g,b, self.Opacity)
+        r, g, b = FillColor
+        c = wx.Colour(r, g, b, self.Opacity)
         self.Brush = wx.Brush(c)
 
-
-    def _Draw(self, dc, WorldToPixel, ScaleWorldToPixel=None, HTdc=None): 
+    def _Draw(self, dc, WorldToPixel, ScaleWorldToPixel=None, HTdc=None):
         Points = WorldToPixel(self.Points)
 
         # draw just the outline, using the dc so the lines are solid
@@ -98,7 +101,6 @@ class AlphaPolygon(FC.Polygon):
             gc.SetBrush(self.Brush)
             gc.DrawLines(Points)
 
-        
 
 class XFormTriangle(FC.Group):
     def __init__(self, parent, xform, color, isactive, isselected, style):
@@ -107,28 +109,31 @@ class XFormTriangle(FC.Group):
         self.parent = parent
         points = xform.points
 
-        self.triangle = AlphaPolygon(points, LineColor=color, FillColor=color,
-                                     LineStyle=style,
-                                     Opacity=isselected * 96 or isactive * 64)
+        self.triangle = AlphaPolygon(
+            points,
+            LineColor=color,
+            FillColor=color,
+            LineStyle=style,
+            Opacity=isselected * 96 or isactive * 64,
+        )
 
         diameter = parent.circle_radius * 2
-        circles = map(partial(FC.Circle, Diameter=diameter, LineColor=color),
-                      points)
-        text = map(partial(FC.Text, Size=10,Color=color), "XYO", points)
+        circles = list(
+            map(partial(FC.Circle, Diameter=diameter, LineColor=color), points)
+        )
+        text = list(map(partial(FC.Text, Size=10, Color=color), "XYO", points))
         self._circles = circles
-        
+
         if isactive:
             parent._cornerpoints = self.GetCornerPoints()
-            corners = [FC.Line(i, LineColor=color)
-                       for i in parent._cornerpoints]
+            corners = [FC.Line(i, LineColor=color) for i in parent._cornerpoints]
             text.extend(corners)
 
         FC.Group.__init__(self, [self.triangle] + circles + text)
 
-
     def GetCornerPoints(self):
         """Calculate the lines making up the corners of the triangle."""
-        a,d,b,e,c,f = self.xform.coefs
+        a, d, b, e, c, f = self.xform.coefs
 
         # Get the 4 corner points
         p1 = c + a + b, f + d + e
@@ -138,50 +143,57 @@ class XFormTriangle(FC.Group):
 
         # define towards which other corners the corner lines will point.
         # (p1, p4) and (p2, p3) are opposing corners.
-        combinations = ((p1,p2,p3),
-                        (p2,p1,p4),
-                        (p3,p1,p4),
-                        (p4,p2,p3))
+        combinations = ((p1, p2, p3), (p2, p1, p4), (p3, p1, p4), (p4, p2, p3))
 
         # Make the length of the corner lines 1/10th of the distance to the
         # respective corner. The lists of points returned will be drawn as
         # multilines.
-        return [((x1+(x2-x1)/10, y1+(y2-y1)/10),
-                 (x1, y1),
-                 (x1+(x3-x1)/10, y1+(y3-y1)/10))
-                for (x1,y1),(x2,y2),(x3,y3) in combinations]            
-
+        return [
+            (
+                (x1 + (x2 - x1) / 10, y1 + (y2 - y1) / 10),
+                (x1, y1),
+                (x1 + (x3 - x1) / 10, y1 + (y3 - y1) / 10),
+            )
+            for (x1, y1), (x2, y2), (x3, y3) in combinations
+        ]
 
 
 class XformCanvas(FC.FloatCanvas):
-    colors = [( 255,   0,   0), # red
-              ( 255, 255,   0), # yellow
-              (   0, 255,   0), # green
-              (   0, 255, 255), # light blue
-              (   0,   0, 255), # dark blue
-              ( 255,   0, 255), # purple
-              ( 255, 127,   0), # orange
-              ( 255,   0, 127)  # another purplish one
-              ] # TODO: extend the color list.
+    colors = [
+        (255, 0, 0),  # red
+        (255, 255, 0),  # yellow
+        (0, 255, 0),  # green
+        (0, 255, 255),  # light blue
+        (0, 0, 255),  # dark blue
+        (255, 0, 255),  # purple
+        (255, 127, 0),  # orange
+        (255, 0, 127),  # another purplish one
+    ]  # TODO: extend the color list.
 
     style = "ShortDash" if "linux" in sys.platform else "Dot"
-    preview = [] 
+    preview = []
 
     @BindEvents
     def __init__(self, parent):
         self.parent = parent.parent
-        FC.FloatCanvas.__init__(self, parent,
-                                size=(300,300), # HACK: This needs to be here.
-                                BackgroundColor="BLACK")
+        FC.FloatCanvas.__init__(
+            self,
+            parent,
+            size=(300, 300),  # HACK: This needs to be here.
+            BackgroundColor="BLACK",
+        )
 
         # Create the reference triangle
-        points = ((0,0),(1,0),(0,1))
-        self.AddPolygon(points,
-                        LineColor="Grey",
-                        LineStyle=self.style)
-        map(lambda x,y,z: self.AddText(x,y,Position=z,Size=10,Color="Grey"),
-            "OXY",points,("tr","tl","br"))
-
+        points = ((0, 0), (1, 0), (0, 1))
+        self.AddPolygon(points, LineColor="Grey", LineStyle=self.style)
+        list(
+            map(
+                lambda x, y, z: self.AddText(x, y, Position=z, Size=10, Color="Grey"),
+                "OXY",
+                points,
+                ("tr", "tl", "br"),
+            )
+        )
 
         # Lists that hold draw objects
         self.xform_groups = []
@@ -203,27 +215,33 @@ class XformCanvas(FC.FloatCanvas):
         self.HasChanged = False
         self.StartMove = None
         self.callback = None
-        self.last_mouse_pos = 0,0
+        self.last_mouse_pos = 0, 0
         self._cornerpoints = ()
-
 
     def ShowFlame(self, flame=None, rezoom=True):
         flame = flame or self.parent.flame
         active = self.parent.ActiveXform
-        
+
         self.RemoveObjects(self.preview)
         del self.preview[:]
         if config["Variation-Preview"]:
-            self.preview[:] = VarPreview(active, Color=self.color_helper(active)).objects[:]
-            self.AddObjects(self.preview)  
+            self.preview[:] = VarPreview(
+                active, Color=self.color_helper(active)
+            ).objects[:]
+            self.AddObjects(self.preview)
 
         self.RemoveObjects(self.xform_groups)
-        if config['Edit-Post-Xform']:
-            self.xform_groups = [self.AddXform(active, isactive=False),
-                                 self.AddXform(active.post, isactive=True)]
+        if config["Edit-Post-Xform"]:
+            self.xform_groups = [
+                self.AddXform(active, isactive=False),
+                self.AddXform(active.post, isactive=True),
+            ]
         else:
-            self.xform_groups = [self.AddXform(i, isactive=False)
-                                 for i in flame.iter_xforms() if i != active]
+            self.xform_groups = [
+                self.AddXform(i, isactive=False)
+                for i in flame.iter_xforms()
+                if i != active
+            ]
             self.xform_groups.append(self.AddXform(active, isactive=True))
 
         if rezoom:
@@ -233,66 +251,67 @@ class XformCanvas(FC.FloatCanvas):
             self.Draw()
         self._idle_refresh = False
 
-
-    def AddXform(self, xform, isactive=False, isselected=None, style='Solid'):
+    def AddXform(self, xform, isactive=False, isselected=None, style="Solid"):
         color = self.color_helper(xform)
         if isselected is None:
             isselected = xform is self.SelectedXform
-           
-        t = XFormTriangle(self, xform, color, isactive, isselected, style)       
+
+        t = XFormTriangle(self, xform, color, isactive, isselected, style)
         self.AddObject(t)
         return t
-
 
     def color_helper(self, xform):
         xform = xform._parent if xform.ispost() else xform
         if xform.isfinal():
             return (255, 255, 255)
-        return self.colors[xform.index%len(self.colors)]
-
+        return self.colors[xform.index % len(self.colors)]
 
     def MakeGrid(self):
-        self.GridUnder = FC.DotGrid(Spacing=(.1, .1),
-                                    Size=150,
-                                    Color=(100,100,100),
-                                    Cross=True,
-                                    CrossThickness=1)
-
+        self.GridUnder = FC.DotGrid(
+            Spacing=(0.1, 0.1),
+            Size=150,
+            Color=(100, 100, 100),
+            Cross=True,
+            CrossThickness=1,
+        )
 
     def AdjustZoom(self, factor, refresh=True):
         """Changes the scale, resets the grid and circle sizes and refreshes
         the canvas."""
         self.Scale *= factor
         self.SetToNewScale(DrawFlag=False)
-        
+
         # Adjust Grid Spacing
         # k / scale means: 1 line each k pixels. This is truncated to the
         # closest power of 10.
         spacing = 10 ** round(math.log10(75 / self.Scale))
-        self.GridUnder.Spacing = N.array((spacing,spacing))
+        self.GridUnder.Spacing = N.array((spacing, spacing))
 
         # Adjust the circles at the triangle edges
         diameter = self.circle_radius * 2
-        map(lambda x: x.SetDiameter(diameter),
-            itertools.chain(*(i._circles for i in self.xform_groups)))
+        list(
+            map(
+                lambda x: x.SetDiameter(diameter),
+                itertools.chain(*(i._circles for i in self.xform_groups)),
+            )
+        )
 
         # Refresh canvas
         self._BackgroundDirty = True
         self.Draw()
 
-
     def IterXforms(self):
         active = self.parent.ActiveXform
-        if config['Edit-Post-Xform']:
+        if config["Edit-Post-Xform"]:
             return active.post, active
         # the iteration needs to be reversed here so that the ordering is
         # consistent with the display on canvas (last xform on top)
-        lst = [i for i in reversed(list(self.parent.flame.iter_xforms()))
-               if i != active]
+        lst = [
+            i for i in reversed(list(self.parent.flame.iter_xforms())) if i != active
+        ]
         return [active] + lst
 
-
-    def ActivateCallback(self,coords):
+    def ActivateCallback(self, coords):
         if self.callback:
             self.callback(coords)
             self.HasChanged = True
@@ -301,15 +320,17 @@ class XformCanvas(FC.FloatCanvas):
             self.parent.XformTabs.Xform.UpdateView()
             self.parent.image.RenderPreview()
 
-
     def VertexHitTest(self, mousepos):
         """Checks if the given point is on top of a vertex."""
         for xform in self.IterXforms():
             x, y, o = xform.points
 
             if polar(mousepos - o)[0] < self.circle_radius:
-                cb = (partial(setattr, xform, "pos") if config["Lock-Axes"] 
-                      else partial(setattr, xform, "o"))
+                cb = (
+                    partial(setattr, xform, "pos")
+                    if config["Lock-Axes"]
+                    else partial(setattr, xform, "o")
+                )
                 return o, xform, cb
             elif polar(mousepos - x)[0] < self.circle_radius:
                 return x, xform, partial(setattr, xform, "x")
@@ -317,8 +338,6 @@ class XformCanvas(FC.FloatCanvas):
                 return y, xform, partial(setattr, xform, "y")
 
         return None, None, None
-
-
 
     def CalcScale(self, points, mousepos, hittest=False):
         """Returns the proportion by which the xform needs to be scaled to make
@@ -340,19 +359,20 @@ class XformCanvas(FC.FloatCanvas):
             ref_height = rect(polar(o - x) - angle)[1]
             return (ref_height - height) / ref_height
 
-
     def side_helper(self, xform, funcname, mousepos):
         """Takes the result of SideHitTest and builds a proper callback."""
-        if funcname == 'scale':
+        if funcname == "scale":
+
             def cb(pos):
                 return xform.scale(self.CalcScale(xform.points, pos))
+
             return cb
 
         if funcname == "rotate":
             pivot = xform.o
             func = partial(xform.rotate, pivot=pivot)
         elif config["Lock-Axes"]:
-            pivot = (0,0) if config["World-Pivot"] else xform.o
+            pivot = (0, 0) if config["World-Pivot"] else xform.o
             func = partial(xform.rotate, pivot=pivot)
         else:
             pivot = xform.o
@@ -362,36 +382,36 @@ class XformCanvas(FC.FloatCanvas):
             angle = polar(pos - pivot)[1]
             func(angle - cb.prev_angle)
             cb.prev_angle = angle
+
         cb.prev_angle = polar(mousepos - pivot)[1]
         return cb
-
 
     def SideHitTest(self, mousepos):
         """Checks if the given point is near one of the triangle sides
         or corners."""
         for xform in self.IterXforms():
-            xf = xform # TODO:refactor
-            x,y,o = xf.points
-            for points,func in (((x,y,o), 'scale'),
-                                ((x,o,y), 'rotate_x'),
-                                ((y,o,x), 'rotate_y')):
+            xf = xform  # TODO:refactor
+            x, y, o = xf.points
+            for points, func in (
+                ((x, y, o), "scale"),
+                ((x, o, y), "rotate_x"),
+                ((y, o, x), "rotate_y"),
+            ):
                 if self.CalcScale(points, mousepos, hittest=True):
-                    return (points[:2], xform,
-                            self.side_helper(xf, func, mousepos))
+                    return (points[:2], xform, self.side_helper(xf, func, mousepos))
 
         # TODO: detect the actual lines. Right now, it just checks a radius
         # from the middle point.
-        radius = self.circle_radius * 3 # better too big than too small.
-        for i,j,k in (self._cornerpoints):
+        radius = self.circle_radius * 3  # better too big than too small.
+        for i, j, k in self._cornerpoints:
             if polar(mousepos - j)[0] < radius:
                 if config["Edit-Post-Xform"]:
                     xform = self.parent.ActiveXform.post
                 else:
                     xform = self.parent.ActiveXform
-                return (i,j,k), xform, self.side_helper(xform, 'rotate', mousepos)
+                return (i, j, k), xform, self.side_helper(xform, "rotate", mousepos)
 
         return None, None, None
-
 
     def XformHitTest(self, mousepos):
         """Checks if the given point is inside the area of the xform.
@@ -401,36 +421,34 @@ class XformCanvas(FC.FloatCanvas):
         for xform in self.IterXforms():
             x, y, o = xform.points
 
-            if angle_helper(mousepos - o, x - o, y - o) and \
-               angle_helper(mousepos - x, o - x, y - x):
+            if angle_helper(mousepos - o, x - o, y - o) and angle_helper(
+                mousepos - x, o - x, y - x
+            ):
                 diff = mousepos - o
-                return xform, lambda coord: setattr(xform, "pos", coord-diff)
+                return xform, lambda coord: setattr(xform, "pos", coord - diff)
 
         return None, None
-
 
     def ZoomToFit(self):
         # Calculate bounding box by hand, FC doesn't work right.
         points = list(itertools.chain(x.points for x in self.IterXforms()))
         self.ZoomToBB(NewBB=BBox.fromPoints(points), DrawFlag=False)
-        
-        # Factor of .8 is to leave some breathing room
-        self.AdjustZoom(.8)
 
+        # Factor of .8 is to leave some breathing room
+        self.AdjustZoom(0.8)
 
     @Bind(wx.EVT_ENTER_WINDOW)
-    def OnEnter(self,e):
-##        self.CaptureMouse()
+    def OnEnter(self, e):
+        ##        self.CaptureMouse()
         pass
 
     @Bind(wx.EVT_LEAVE_WINDOW)
-    def OnLeave(self,e):
-##        self.ReleaseMouse()
+    def OnLeave(self, e):
+        ##        self.ReleaseMouse()
         pass
 
-
     @Bind(wx.EVT_IDLE)
-    def OnIdle(self,e):
+    def OnIdle(self, e):
         if self._idle_left_drag is not None:
             coords = self._idle_left_drag
             self._idle_left_drag = None
@@ -440,7 +458,7 @@ class XformCanvas(FC.FloatCanvas):
             move = self._idle_right_drag
             self._idle_right_drag = None
             self.StartMove = self.EndMove
-            self.MoveImage(move, 'Pixel')
+            self.MoveImage(move, "Pixel")
 
         if self._idle_resize != 1:
             self.AdjustZoom(self._idle_resize, refresh=False)
@@ -450,17 +468,15 @@ class XformCanvas(FC.FloatCanvas):
         if self._idle_refresh and not self.parent.scriptrunning:
             self.ShowFlame(rezoom=False)
 
-
     @Bind(FC.EVT_MOUSEWHEEL)
-    def OnWheel(self,e):
-        self._idle_resize *= 1.25 if e.GetWheelRotation()>0 else 0.8
-
+    def OnWheel(self, e):
+        self._idle_resize *= 1.25 if e.GetWheelRotation() > 0 else 0.8
 
     @Bind(FC.EVT_LEFT_DOWN)
-    def OnLeftDown(self,e):
+    def OnLeftDown(self, e):
         self.CaptureMouse()
         if self.SelectedXform:
-            if config['Edit-Post-Xform']:
+            if config["Edit-Post-Xform"]:
                 if self.SelectedXform.ispost():
                     self.parent.ActiveXform = self.SelectedXform._parent
                 else:
@@ -468,7 +484,7 @@ class XformCanvas(FC.FloatCanvas):
                     # editing mode. UpdateView is required to refresh toggle
                     # in toolbar.
                     self.parent.ActiveXform = self.SelectedXform
-                    config['Edit-Post-Xform'] = False
+                    config["Edit-Post-Xform"] = False
                     self.parent.notebook.UpdateView()
             else:
                 self.parent.ActiveXform = self.SelectedXform
@@ -476,15 +492,13 @@ class XformCanvas(FC.FloatCanvas):
             self.parent.XformTabs.UpdateView()
 
             # EXPERIMENT!
-            t = self.AddXform(self.SelectedXform, isselected=False,
-                              style=self.style)
+            t = self.AddXform(self.SelectedXform, isselected=False, style=self.style)
             self.shadow.append(t)
 
-
     @Bind(FC.EVT_LEFT_UP)
-    def OnLeftUp(self,e):
+    def OnLeftUp(self, e):
         # This release mouse causes a bug under windows.
-##        self.ReleaseMouse()
+        ##        self.ReleaseMouse()
 
         # EXPERIMENT!
         self.RemoveObjects(self.shadow)
@@ -499,30 +513,26 @@ class XformCanvas(FC.FloatCanvas):
             self.HasChanged = False
             self.parent.TempSave()
 
-
     @Bind(FC.EVT_RIGHT_DOWN)
-    def OnRightDown(self,e):
+    def OnRightDown(self, e):
         self.CaptureMouse()
         self.StartMove = N.array(e.GetPosition())
-        self.PrevMoveXY = (0,0)
-
+        self.PrevMoveXY = (0, 0)
 
     @Bind(FC.EVT_RIGHT_UP)
-    def OnRightUp(self,e):
+    def OnRightUp(self, e):
         if self.HasCapture():
             self.ReleaseMouse()
 
         self.StartMove = None
         self.PerformHitTests()
 
-
     @Bind(wx.EVT_MOUSE_CAPTURE_LOST)
     def OnLostMouseCapture(self, e):
         self.StartMove = None
 
-
     @Bind(FC.EVT_MOTION)
-    def OnMove(self,e):
+    def OnMove(self, e):
         self.ClearSelectedXform()
         # NOTE: OnMove is called when scrolling, but the event itself doesn't
         # indicate that it was caused by scrolling.
@@ -542,11 +552,10 @@ class XformCanvas(FC.FloatCanvas):
         else:
             self.PerformHitTests()
 
-
     def PerformHitTests(self):
         if self.parent.scriptrunning:
             return
-        
+
         self.ClearSelectedXform()
         # turn coords into N.array explicitly, as it's not guaranteed to
         # be of that type on all platforms.
@@ -564,46 +573,54 @@ class XformCanvas(FC.FloatCanvas):
         if cb:
             self.SelectXform(xform, highlight_line=line)
             self.callback = cb
-            return 
+            return
 
         # Finally, test for area
         xform, cb = self.XformHitTest(coords)
         if cb:
             self.SelectXform(xform)
             self.callback = cb
-            return 
-        
+            return
 
     def SelectXform(self, xform, highlight_line=None, highlight_point=None):
         self.SelectedXform = xform
         color = self.color_helper(xform)
 
         if not xform.ispost():
-            varlist = [i for i in pyflam3.variation_list if getattr(xform,i)]
+            varlist = [i for i in pyflam3.variation_list if getattr(xform, i)]
             hor, ver = self.GetSize()
             hor -= 5
             ver -= 5
             for i in reversed(varlist):
                 ver -= 12
-                self.objects.append(self.AddText(i, self.PixelToWorld((hor,ver)),
-                                    Size = 8, Position = "tr", Color=color))
+                self.objects.append(
+                    self.AddText(
+                        i,
+                        self.PixelToWorld((hor, ver)),
+                        Size=8,
+                        Position="tr",
+                        Color=color,
+                    )
+                )
 
         if highlight_line is not None:
-            self.objects.append(self.AddLine(highlight_line, LineColor=color,
-                                             LineWidth=2))
+            self.objects.append(
+                self.AddLine(highlight_line, LineColor=color, LineWidth=2)
+            )
         if highlight_point is not None:
-            self.objects.append(self.AddCircle(highlight_point, Diameter=self.circle_radius * 1.7,
-                                              FillColor=color))
+            self.objects.append(
+                self.AddCircle(
+                    highlight_point, Diameter=self.circle_radius * 1.7, FillColor=color
+                )
+            )
 
         self._idle_refresh = True
-
 
     def ClearSelectedXform(self):
         self.SelectedXform = None
         self.RemoveObjects(self.objects)
         del self.objects[:]
         self._idle_refresh = True
-
 
     def BlockCanvas(self, flag):
         if not flag:
@@ -612,18 +629,16 @@ class XformCanvas(FC.FloatCanvas):
         self.OnLeftUp(None)
         self.ClearSelectedXform()
 
-
     # Win uses MidMove, while Linux uses StartMove (WHY?). This makes the code
     # Compatible between both.
     @property
     def MidMove(self):
         return self.StartMove
-    @MidMove.setter
-    def MidMove(self,v):
-        self.StartMove = v
 
+    @MidMove.setter
+    def MidMove(self, v):
+        self.StartMove = v
 
     @property
     def circle_radius(self):
         return 5 / self.Scale
-

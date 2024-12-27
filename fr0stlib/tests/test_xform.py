@@ -293,108 +293,130 @@ flame_str = """
 </flame>
 """
 
+
 class TestXform(TestCase):
     def setUp(self):
         self.flame = Flame(flame_str)
 
     def assertTupleAlmostEquals(self, a, b):
         for received, expected in zip(a, b):
-            self.assertAlmostEquals(received, expected, 7, "%s != %s" % (a, b))
+            self.assertAlmostEqual(received, expected, 7, "%s != %s" % (a, b))
 
     def test_tostring(self):
         s = self.flame.xform[0].to_string()
         e = etree.fromstring(s)
-    
-        self.assertEquals(e.tag, 'xform')
-        self.assertEquals(float(e.attrib['linear']), 1.0)
-        self.assertEquals(float(e.attrib['weight']), 1.0)
-        self.assertEquals(float(e.attrib['color']), 0.0)
-        self.assertEquals(map(float, e.attrib['coefs'].split()), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(map(float, e.attrib['chaos'].split()), [1.0, 1.0, 1.0, 0.0])
 
-        attrib_keys = e.attrib.keys()
-        attrib_keys.remove('linear')
-        attrib_keys.remove('weight')
-        attrib_keys.remove('color')
-        attrib_keys.remove('coefs')
-        attrib_keys.remove('chaos')
-        self.assertEquals(attrib_keys, [])
+        self.assertEqual(e.tag, "xform")
+        self.assertEqual(float(e.attrib["linear"]), 1.0)
+        self.assertEqual(float(e.attrib["weight"]), 1.0)
+        self.assertEqual(float(e.attrib["color"]), 0.0)
+        self.assertEqual(
+            list(map(float, e.attrib["coefs"].split())), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(map(float, e.attrib["chaos"].split())), [1.0, 1.0, 1.0, 0.0]
+        )
+
+        attrib_keys = list(e.attrib.keys())
+        attrib_keys.remove("linear")
+        attrib_keys.remove("weight")
+        attrib_keys.remove("color")
+        attrib_keys.remove("coefs")
+        attrib_keys.remove("chaos")
+        self.assertEqual(attrib_keys, [])
 
     def test_repr(self):
-        self.assertEquals(repr(self.flame.xform[0]), '<xform 1>')
-        self.assertEquals(repr(self.flame.xform[1]), '<xform 2>')
-        self.assertEquals(repr(self.flame.xform[2]), '<xform 3>')
-        self.assertEquals(repr(self.flame.xform[3]), '<xform 4>')
+        self.assertEqual(repr(self.flame.xform[0]), "<xform 1>")
+        self.assertEqual(repr(self.flame.xform[1]), "<xform 2>")
+        self.assertEqual(repr(self.flame.xform[2]), "<xform 3>")
+        self.assertEqual(repr(self.flame.xform[3]), "<xform 4>")
 
     def test_getattr(self):
         x = self.flame.xform[0]
 
         for var in variation_list:
-            if var == 'linear':
-                self.assertEquals(getattr(x, var), 1.0)
+            if var == "linear":
+                self.assertEqual(getattr(x, var), 1.0)
             else:
-                self.assertEquals(getattr(x, var), 0.0)
+                self.assertEqual(getattr(x, var), 0.0)
 
-        self.assertRaises(AttributeError, lambda: getattr(x, '__setstate__'))
+        self.assertRaises(AttributeError, lambda: getattr(x, "__setstate__"))
 
     def test_chaos(self):
         x = self.flame.xform[0]
-        self.assertEquals(x.chaos[:], [1.0, 1.0, 1.0, 0.0])
+        self.assertEqual(x.chaos[:], [1.0, 1.0, 1.0, 0.0])
 
     def test_post(self):
         x = self.flame.xform[0]
-        self.assertEquals(list(x.post.coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+        self.assertEqual(list(x.post.coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
 
-        self.assertRaises(TypeError, lambda: setattr(x, 'post', 1))
+        self.assertRaises(TypeError, lambda: setattr(x, "post", 1))
 
         orig = x.post
         p = PostXform(x, coefs=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
         x.post = p
 
-        self.assertEquals(list(x.post.coefs), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
+        self.assertEqual(list(x.post.coefs), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0])
 
         x.post = orig
-        self.assertEquals(list(x.post.coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+        self.assertEqual(list(x.post.coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
 
     def test_index(self):
-        self.assertEquals(self.flame.xform[0].index, 0)
-        self.assertEquals(self.flame.xform[1].index, 1)
-        self.assertEquals(self.flame.xform[2].index, 2)
-        self.assertEquals(self.flame.xform[3].index, 3)
-        self.assertEquals(self.flame.final.index, None)
+        self.assertEqual(self.flame.xform[0].index, 0)
+        self.assertEqual(self.flame.xform[1].index, 1)
+        self.assertEqual(self.flame.xform[2].index, 2)
+        self.assertEqual(self.flame.xform[3].index, 3)
+        self.assertEqual(self.flame.final.index, None)
 
     def test_coefs(self):
-        self.assertEquals(list(self.flame.xform[0].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[1].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[2].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[3].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.final.coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+        self.assertEqual(
+            list(self.flame.xform[0].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(self.flame.xform[1].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(self.flame.xform[2].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(self.flame.xform[3].coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(list(self.flame.final.coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
 
-        self.assertEquals(list(self.flame.xform[0].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[1].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[2].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[3].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.final.screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+        self.assertEqual(
+            list(self.flame.xform[0].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(self.flame.xform[1].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(self.flame.xform[2].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(self.flame.xform[3].screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
+        self.assertEqual(
+            list(self.flame.final.screen_coefs), [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        )
 
     def test_list_variations(self):
-        self.assertEquals(self.flame.xform[0].list_variations(), ['linear'])
-        self.assertEquals(self.flame.xform[1].list_variations(), ['linear'])
-        self.assertEquals(self.flame.xform[2].list_variations(), ['linear'])
-        self.assertEquals(self.flame.xform[3].list_variations(), ['linear'])
-        self.assertEquals(self.flame.final.list_variations(), ['linear'])
+        self.assertEqual(self.flame.xform[0].list_variations(), ["linear"])
+        self.assertEqual(self.flame.xform[1].list_variations(), ["linear"])
+        self.assertEqual(self.flame.xform[2].list_variations(), ["linear"])
+        self.assertEqual(self.flame.xform[3].list_variations(), ["linear"])
+        self.assertEqual(self.flame.final.list_variations(), ["linear"])
 
-        
     def test_iter_attributes(self):
         def test_func(x, is_final=False):
-            attr = { 'linear': 1.0, 'weight': 1.0, 'color': 0.0 }
+            attr = {"linear": 1.0, "weight": 1.0, "color": 0.0}
 
             if is_final:
-                del attr['weight']
-                attr['color_speed'] = 0.0
+                del attr["weight"]
+                attr["color_speed"] = 0.0
 
             xattr = dict(x.iter_attributes())
 
-            self.assertEquals(xattr, attr)
+            self.assertEqual(xattr, attr)
 
         test_func(self.flame.xform[0])
         test_func(self.flame.xform[1])
@@ -403,11 +425,11 @@ class TestXform(TestCase):
         test_func(self.flame.final, True)
 
     def test_pos(self):
-        self.assertEquals(self.flame.xform[0].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[1].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[2].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[3].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.final.pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[0].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[1].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[2].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[3].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.final.pos, (0.0, 0.0))
 
         self.flame.xform[0].pos = (1.0, 2.0)
         self.flame.xform[1].pos = (3.0, 4.0)
@@ -415,11 +437,11 @@ class TestXform(TestCase):
         self.flame.xform[3].pos = (7.0, 8.0)
         self.flame.final.pos = (9.0, 10.0)
 
-        self.assertEquals(self.flame.xform[0].pos, (1.0, 2.0))
-        self.assertEquals(self.flame.xform[1].pos, (3.0, 4.0))
-        self.assertEquals(self.flame.xform[2].pos, (5.0, 6.0))
-        self.assertEquals(self.flame.xform[3].pos, (7.0, 8.0))
-        self.assertEquals(self.flame.final.pos, (9.0, 10.0))
+        self.assertEqual(self.flame.xform[0].pos, (1.0, 2.0))
+        self.assertEqual(self.flame.xform[1].pos, (3.0, 4.0))
+        self.assertEqual(self.flame.xform[2].pos, (5.0, 6.0))
+        self.assertEqual(self.flame.xform[3].pos, (7.0, 8.0))
+        self.assertEqual(self.flame.final.pos, (9.0, 10.0))
 
         self.flame.xform[0].move_pos(-1.0, -2.0)
         self.flame.xform[1].move_pos(-3.0, -4.0)
@@ -427,18 +449,18 @@ class TestXform(TestCase):
         self.flame.xform[3].move_pos(-7.0, -8.0)
         self.flame.final.move_pos(-9.0, -10.0)
 
-        self.assertEquals(self.flame.xform[0].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[1].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[2].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[3].pos, (0.0, 0.0))
-        self.assertEquals(self.flame.final.pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[0].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[1].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[2].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[3].pos, (0.0, 0.0))
+        self.assertEqual(self.flame.final.pos, (0.0, 0.0))
 
     def test_x(self):
-        self.assertEquals(self.flame.xform[0].x, (1.0, 0.0))
-        self.assertEquals(self.flame.xform[1].x, (1.0, 0.0))
-        self.assertEquals(self.flame.xform[2].x, (1.0, 0.0))
-        self.assertEquals(self.flame.xform[3].x, (1.0, 0.0))
-        self.assertEquals(self.flame.final.x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[0].x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[1].x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[2].x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[3].x, (1.0, 0.0))
+        self.assertEqual(self.flame.final.x, (1.0, 0.0))
 
         self.flame.xform[0].x = (1.0, 2.0)
         self.flame.xform[1].x = (3.0, 4.0)
@@ -446,30 +468,30 @@ class TestXform(TestCase):
         self.flame.xform[3].x = (7.0, 8.0)
         self.flame.final.x = (9.0, 10.0)
 
-        self.assertEquals(self.flame.xform[0].x, (1.0, 2.0))
-        self.assertEquals(self.flame.xform[1].x, (3.0, 4.0))
-        self.assertEquals(self.flame.xform[2].x, (5.0, 6.0))
-        self.assertEquals(self.flame.xform[3].x, (7.0, 8.0))
-        self.assertEquals(self.flame.final.x, (9.0, 10.0))
+        self.assertEqual(self.flame.xform[0].x, (1.0, 2.0))
+        self.assertEqual(self.flame.xform[1].x, (3.0, 4.0))
+        self.assertEqual(self.flame.xform[2].x, (5.0, 6.0))
+        self.assertEqual(self.flame.xform[3].x, (7.0, 8.0))
+        self.assertEqual(self.flame.final.x, (9.0, 10.0))
 
-        self.flame.xform[0].move_x( 0.0, -2.0)
+        self.flame.xform[0].move_x(0.0, -2.0)
         self.flame.xform[1].move_x(-2.0, -4.0)
         self.flame.xform[2].move_x(-4.0, -6.0)
         self.flame.xform[3].move_x(-6.0, -8.0)
         self.flame.final.move_x(-8.0, -10.0)
 
-        self.assertEquals(self.flame.xform[0].x, (1.0, 0.0))
-        self.assertEquals(self.flame.xform[1].x, (1.0, 0.0))
-        self.assertEquals(self.flame.xform[2].x, (1.0, 0.0))
-        self.assertEquals(self.flame.xform[3].x, (1.0, 0.0))
-        self.assertEquals(self.flame.final.x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[0].x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[1].x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[2].x, (1.0, 0.0))
+        self.assertEqual(self.flame.xform[3].x, (1.0, 0.0))
+        self.assertEqual(self.flame.final.x, (1.0, 0.0))
 
     def test_y(self):
-        self.assertEquals(self.flame.xform[0].y, (0.0, 1.0))
-        self.assertEquals(self.flame.xform[1].y, (0.0, 1.0))
-        self.assertEquals(self.flame.xform[2].y, (0.0, 1.0))
-        self.assertEquals(self.flame.xform[3].y, (0.0, 1.0))
-        self.assertEquals(self.flame.final.y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[0].y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[1].y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[2].y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[3].y, (0.0, 1.0))
+        self.assertEqual(self.flame.final.y, (0.0, 1.0))
 
         self.flame.xform[0].y = (1.0, 2.0)
         self.flame.xform[1].y = (3.0, 4.0)
@@ -477,11 +499,11 @@ class TestXform(TestCase):
         self.flame.xform[3].y = (7.0, 8.0)
         self.flame.final.y = (9.0, 10.0)
 
-        self.assertEquals(self.flame.xform[0].y, (1.0, 2.0))
-        self.assertEquals(self.flame.xform[1].y, (3.0, 4.0))
-        self.assertEquals(self.flame.xform[2].y, (5.0, 6.0))
-        self.assertEquals(self.flame.xform[3].y, (7.0, 8.0))
-        self.assertEquals(self.flame.final.y, (9.0, 10.0))
+        self.assertEqual(self.flame.xform[0].y, (1.0, 2.0))
+        self.assertEqual(self.flame.xform[1].y, (3.0, 4.0))
+        self.assertEqual(self.flame.xform[2].y, (5.0, 6.0))
+        self.assertEqual(self.flame.xform[3].y, (7.0, 8.0))
+        self.assertEqual(self.flame.final.y, (9.0, 10.0))
 
         self.flame.xform[0].move_y(-1.0, -1.0)
         self.flame.xform[1].move_y(-3.0, -3.0)
@@ -489,18 +511,18 @@ class TestXform(TestCase):
         self.flame.xform[3].move_y(-7.0, -7.0)
         self.flame.final.move_y(-9.0, -9.0)
 
-        self.assertEquals(self.flame.xform[0].y, (0.0, 1.0))
-        self.assertEquals(self.flame.xform[1].y, (0.0, 1.0))
-        self.assertEquals(self.flame.xform[2].y, (0.0, 1.0))
-        self.assertEquals(self.flame.xform[3].y, (0.0, 1.0))
-        self.assertEquals(self.flame.final.y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[0].y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[1].y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[2].y, (0.0, 1.0))
+        self.assertEqual(self.flame.xform[3].y, (0.0, 1.0))
+        self.assertEqual(self.flame.final.y, (0.0, 1.0))
 
     def test_o(self):
-        self.assertEquals(self.flame.xform[0].o, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[1].o, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[2].o, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[3].o, (0.0, 0.0))
-        self.assertEquals(self.flame.final.o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[0].o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[1].o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[2].o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[3].o, (0.0, 0.0))
+        self.assertEqual(self.flame.final.o, (0.0, 0.0))
 
         self.flame.xform[0].o = (1.0, 2.0)
         self.flame.xform[1].o = (3.0, 4.0)
@@ -508,11 +530,11 @@ class TestXform(TestCase):
         self.flame.xform[3].o = (7.0, 8.0)
         self.flame.final.o = (9.0, 10.0)
 
-        self.assertEquals(self.flame.xform[0].o, (1.0, 2.0))
-        self.assertEquals(self.flame.xform[1].o, (3.0, 4.0))
-        self.assertEquals(self.flame.xform[2].o, (5.0, 6.0))
-        self.assertEquals(self.flame.xform[3].o, (7.0, 8.0))
-        self.assertEquals(self.flame.final.o, (9.0, 10.0))
+        self.assertEqual(self.flame.xform[0].o, (1.0, 2.0))
+        self.assertEqual(self.flame.xform[1].o, (3.0, 4.0))
+        self.assertEqual(self.flame.xform[2].o, (5.0, 6.0))
+        self.assertEqual(self.flame.xform[3].o, (7.0, 8.0))
+        self.assertEqual(self.flame.final.o, (9.0, 10.0))
 
         self.flame.xform[0].move_o(-1.0, -2.0)
         self.flame.xform[1].move_o(-3.0, -4.0)
@@ -520,67 +542,93 @@ class TestXform(TestCase):
         self.flame.xform[3].move_o(-7.0, -8.0)
         self.flame.final.move_o(-9.0, -10.0)
 
-        self.assertEquals(self.flame.xform[0].o, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[1].o, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[2].o, (0.0, 0.0))
-        self.assertEquals(self.flame.xform[3].o, (0.0, 0.0))
-        self.assertEquals(self.flame.final.o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[0].o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[1].o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[2].o, (0.0, 0.0))
+        self.assertEqual(self.flame.xform[3].o, (0.0, 0.0))
+        self.assertEqual(self.flame.final.o, (0.0, 0.0))
 
     def test_points(self):
-        self.assertEquals(self.flame.xform[0].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
-        self.assertEquals(self.flame.xform[1].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))) 
-        self.assertEquals(self.flame.xform[2].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))) 
-        self.assertEquals(self.flame.xform[3].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))) 
-        self.assertEquals(self.flame.final.points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))) 
+        self.assertEqual(
+            self.flame.xform[0].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(
+            self.flame.xform[1].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(
+            self.flame.xform[2].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(
+            self.flame.xform[3].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(self.flame.final.points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
 
         self.flame.xform[0].points = ((1.0, 2.0), (3.0, 4.0), (5.0, 6.0))
         self.flame.xform[1].points = ((3.0, 4.0), (5.0, 6.0), (7.0, 8.0))
         self.flame.xform[2].points = ((5.0, 6.0), (7.0, 8.0), (9.0, 10.0))
         self.flame.xform[3].points = ((7.0, 8.0), (9.0, 10.0), (11.0, 12.0))
-        self.flame.final.points =    ((9.0, 10.0), (11.0, 12.0), (13.0, 14.0))
+        self.flame.final.points = ((9.0, 10.0), (11.0, 12.0), (13.0, 14.0))
 
-        self.assertEquals(self.flame.xform[0].points, ((1.0, 2.0), (3.0, 4.0), (5.0, 6.0)))
-        self.assertEquals(self.flame.xform[1].points, ((3.0, 4.0), (5.0, 6.0), (7.0, 8.0)))
-        self.assertEquals(self.flame.xform[2].points, ((5.0, 6.0), (7.0, 8.0), (9.0, 10.0)))
-        self.assertEquals(self.flame.xform[3].points, ((7.0, 8.0), (9.0, 10.0), (11.0, 12.0)))
-        self.assertEquals(self.flame.final.points,    ((9.0, 10.0), (11.0, 12.0), (13.0, 14.0)))
+        self.assertEqual(
+            self.flame.xform[0].points, ((1.0, 2.0), (3.0, 4.0), (5.0, 6.0))
+        )
+        self.assertEqual(
+            self.flame.xform[1].points, ((3.0, 4.0), (5.0, 6.0), (7.0, 8.0))
+        )
+        self.assertEqual(
+            self.flame.xform[2].points, ((5.0, 6.0), (7.0, 8.0), (9.0, 10.0))
+        )
+        self.assertEqual(
+            self.flame.xform[3].points, ((7.0, 8.0), (9.0, 10.0), (11.0, 12.0))
+        )
+        self.assertEqual(
+            self.flame.final.points, ((9.0, 10.0), (11.0, 12.0), (13.0, 14.0))
+        )
 
         self.flame.xform[0].points = ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
         self.flame.xform[1].points = ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
         self.flame.xform[2].points = ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
         self.flame.xform[3].points = ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
-        self.flame.final.points =    ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        self.flame.final.points = ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
 
-        self.assertEquals(self.flame.xform[0].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
-        self.assertEquals(self.flame.xform[1].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
-        self.assertEquals(self.flame.xform[2].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
-        self.assertEquals(self.flame.xform[3].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
-        self.assertEquals(self.flame.final.points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
+        self.assertEqual(
+            self.flame.xform[0].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(
+            self.flame.xform[1].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(
+            self.flame.xform[2].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(
+            self.flame.xform[3].points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+        )
+        self.assertEqual(self.flame.final.points, ((1.0, 0.0), (0.0, 1.0), (0.0, 0.0)))
 
     def test_polar(self):
-        self.assertEquals(self.flame.xform[0].xp, (1, 0))
-        self.assertEquals(self.flame.xform[1].xp, (1, 0))
-        self.assertEquals(self.flame.xform[2].xp, (1, 0))
-        self.assertEquals(self.flame.xform[3].xp, (1, 0))
-        self.assertEquals(self.flame.final.xp, (1, 0))
+        self.assertEqual(self.flame.xform[0].xp, (1, 0))
+        self.assertEqual(self.flame.xform[1].xp, (1, 0))
+        self.assertEqual(self.flame.xform[2].xp, (1, 0))
+        self.assertEqual(self.flame.xform[3].xp, (1, 0))
+        self.assertEqual(self.flame.final.xp, (1, 0))
 
-        self.assertEquals(self.flame.xform[0].yp, (1, 90))
-        self.assertEquals(self.flame.xform[1].yp, (1, 90))
-        self.assertEquals(self.flame.xform[2].yp, (1, 90))
-        self.assertEquals(self.flame.xform[3].yp, (1, 90))
-        self.assertEquals(self.flame.final.yp, (1, 90))
+        self.assertEqual(self.flame.xform[0].yp, (1, 90))
+        self.assertEqual(self.flame.xform[1].yp, (1, 90))
+        self.assertEqual(self.flame.xform[2].yp, (1, 90))
+        self.assertEqual(self.flame.xform[3].yp, (1, 90))
+        self.assertEqual(self.flame.final.yp, (1, 90))
 
-        self.assertEquals(self.flame.xform[0].op, (0, 0))
-        self.assertEquals(self.flame.xform[1].op, (0, 0))
-        self.assertEquals(self.flame.xform[2].op, (0, 0))
-        self.assertEquals(self.flame.xform[3].op, (0, 0))
-        self.assertEquals(self.flame.final.op, (0, 0))
+        self.assertEqual(self.flame.xform[0].op, (0, 0))
+        self.assertEqual(self.flame.xform[1].op, (0, 0))
+        self.assertEqual(self.flame.xform[2].op, (0, 0))
+        self.assertEqual(self.flame.xform[3].op, (0, 0))
+        self.assertEqual(self.flame.final.op, (0, 0))
 
-        self.assertEquals(self.flame.xform[0].polars, ((1, 0), (1, 90), (0, 0)))
-        self.assertEquals(self.flame.xform[1].polars, ((1, 0), (1, 90), (0, 0)))
-        self.assertEquals(self.flame.xform[2].polars, ((1, 0), (1, 90), (0, 0)))
-        self.assertEquals(self.flame.xform[3].polars, ((1, 0), (1, 90), (0, 0)))
-        self.assertEquals(self.flame.final.polars,    ((1, 0), (1, 90), (0, 0)))
+        self.assertEqual(self.flame.xform[0].polars, ((1, 0), (1, 90), (0, 0)))
+        self.assertEqual(self.flame.xform[1].polars, ((1, 0), (1, 90), (0, 0)))
+        self.assertEqual(self.flame.xform[2].polars, ((1, 0), (1, 90), (0, 0)))
+        self.assertEqual(self.flame.xform[3].polars, ((1, 0), (1, 90), (0, 0)))
+        self.assertEqual(self.flame.final.polars, ((1, 0), (1, 90), (0, 0)))
 
         self.flame.xform[0].xp = (1.0, 180.0)
         self.assertTupleAlmostEquals(self.flame.xform[0].x, (-1, 0))
@@ -645,7 +693,7 @@ class TestXform(TestCase):
 
         x.rotate(270)
         self.assertTupleAlmostEquals(x.x, (0, -1))
-        self.assertTupleAlmostEquals(x.y, (1,  0))
+        self.assertTupleAlmostEquals(x.y, (1, 0))
 
         x.rotate(-270)
         self.assertTupleAlmostEquals(x.x, (1, 0))
@@ -696,44 +744,44 @@ class TestXform(TestCase):
         self.assertTupleAlmostEquals(x.y, (0, 1))
         self.assertTupleAlmostEquals(x.o, (0, 0))
 
-        x.orbit(90, pivot=(1,1))
+        x.orbit(90, pivot=(1, 1))
         self.assertTupleAlmostEquals(x.x, (3, 0))
         self.assertTupleAlmostEquals(x.y, (2, 1))
         self.assertTupleAlmostEquals(x.o, (2, 0))
 
-        x.orbit(-90, pivot=(1,1))
+        x.orbit(-90, pivot=(1, 1))
         self.assertTupleAlmostEquals(x.x, (1, 0))
         self.assertTupleAlmostEquals(x.y, (0, 1))
         self.assertTupleAlmostEquals(x.o, (0, 0))
 
     def test_ispost(self):
-        self.assertEquals(self.flame.xform[0].ispost(), False)
-        self.assertEquals(self.flame.xform[1].ispost(), False)
-        self.assertEquals(self.flame.xform[2].ispost(), False)
-        self.assertEquals(self.flame.xform[3].ispost(), False)
-        self.assertEquals(self.flame.final.ispost(), False)
+        self.assertEqual(self.flame.xform[0].ispost(), False)
+        self.assertEqual(self.flame.xform[1].ispost(), False)
+        self.assertEqual(self.flame.xform[2].ispost(), False)
+        self.assertEqual(self.flame.xform[3].ispost(), False)
+        self.assertEqual(self.flame.final.ispost(), False)
 
-        self.assertEquals(self.flame.xform[0].post.ispost(), True)
-        self.assertEquals(self.flame.xform[1].post.ispost(), True)
-        self.assertEquals(self.flame.xform[2].post.ispost(), True)
-        self.assertEquals(self.flame.xform[3].post.ispost(), True)
-        self.assertEquals(self.flame.final.post.ispost(), True)
+        self.assertEqual(self.flame.xform[0].post.ispost(), True)
+        self.assertEqual(self.flame.xform[1].post.ispost(), True)
+        self.assertEqual(self.flame.xform[2].post.ispost(), True)
+        self.assertEqual(self.flame.xform[3].post.ispost(), True)
+        self.assertEqual(self.flame.final.post.ispost(), True)
 
     def test_isfinal(self):
-        self.assertEquals(self.flame.xform[0].isfinal(), False)
-        self.assertEquals(self.flame.xform[1].isfinal(), False)
-        self.assertEquals(self.flame.xform[2].isfinal(), False)
-        self.assertEquals(self.flame.xform[3].isfinal(), False)
-        self.assertEquals(self.flame.final.isfinal(), True)
+        self.assertEqual(self.flame.xform[0].isfinal(), False)
+        self.assertEqual(self.flame.xform[1].isfinal(), False)
+        self.assertEqual(self.flame.xform[2].isfinal(), False)
+        self.assertEqual(self.flame.xform[3].isfinal(), False)
+        self.assertEqual(self.flame.final.isfinal(), True)
 
-        self.assertEquals(self.flame.xform[0].post.isfinal(), False)
-        self.assertEquals(self.flame.xform[1].post.isfinal(), False)
-        self.assertEquals(self.flame.xform[2].post.isfinal(), False)
-        self.assertEquals(self.flame.xform[3].post.isfinal(), False)
-        self.assertEquals(self.flame.final.post.isfinal(), False)
+        self.assertEqual(self.flame.xform[0].post.isfinal(), False)
+        self.assertEqual(self.flame.xform[1].post.isfinal(), False)
+        self.assertEqual(self.flame.xform[2].post.isfinal(), False)
+        self.assertEqual(self.flame.xform[3].post.isfinal(), False)
+        self.assertEqual(self.flame.final.post.isfinal(), False)
 
     def test_copy(self):
-        x  = self.flame.xform[0]
+        x = self.flame.xform[0]
         c = x.copy()
 
         self.assertTrue(x is not c)
@@ -744,23 +792,23 @@ class TestXform(TestCase):
         self.assertTrue(x.post._parent is x)
         self.assertTrue(c.post._parent is c)
 
-        self.assertEquals(c.index, 4)
+        self.assertEqual(c.index, 4)
 
         for key in x.__dict__:
-            if key in ('post', 'chaos'):
+            if key in ("post", "chaos"):
                 continue
 
-            self.assertEquals(getattr(x, key), getattr(c, key))
+            self.assertEqual(getattr(x, key), getattr(c, key))
 
         c.delete()
         self.assertTrue(c not in self.flame.xform)
 
     def test_random(self):
         x = Xform.random(self.flame, fx=1)
-        self.assertEquals(x, None)
+        self.assertEqual(x, None)
 
         x = Xform.random(self.flame, fx=0)
-        self.assertNotEquals(x, None)
+        self.assertNotEqual(x, None)
         self.assertTrue(x in self.flame.xform)
         self.assertTrue(x.index, 5)
         x.delete()
@@ -769,34 +817,31 @@ class TestXform(TestCase):
         self.flame.final = None
 
         x = Xform.random(self.flame, fx=1)
-        self.assertNotEquals(x, None)
+        self.assertNotEqual(x, None)
 
         if x.isfinal():
             self.assertTrue(x is self.flame.final)
-            self.assertEquals(x.index, None)
+            self.assertEqual(x.index, None)
         else:
             self.assertTrue(x in self.flame.xform)
-            self.assertEquals(x.index, 5)
+            self.assertEqual(x.index, 5)
 
         x.delete()
 
         self.flame.final = f
 
         x = Xform.random(self.flame, fx=0, ident=1)
-        self.assertNotEquals(x, None)
+        self.assertNotEqual(x, None)
         self.assertTrue(x in self.flame.xform)
         self.assertTrue(x.index, 5)
 
-        #for k in x.list_variations():
+        # for k in x.list_variations():
         #    self.assertEquals(getattr(x, k), 1.0, '%s = %s' % (k, getattr(x, k)))
 
         x.delete()
 
-
         x = Xform.random(self.flame, fx=0, xw=1)
-        self.assertNotEquals(x, None)
+        self.assertNotEqual(x, None)
         self.assertTrue(x in self.flame.xform)
         self.assertTrue(x.index, 5)
         x.delete()
-
-

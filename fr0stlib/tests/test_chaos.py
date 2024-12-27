@@ -290,104 +290,105 @@ flame_str = """
 </flame>
 """
 
+
 class TestChaos(TestCase):
-   #<xform linear="1.0" weight="1.0" color="0.0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 1.0 1.0 0.0 " />
-   #<xform linear="1" weight="1" color="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 0.0 0.0 0.0 " />
-   #<xform linear="1" weight="1" color="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 0.0 0.0 0.0 " />
-   #<xform linear="1" weight="1" color="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 0.0 0.0 " />
-   #<finalxform linear="1" color="0" color_speed="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" />
+    # <xform linear="1.0" weight="1.0" color="0.0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 1.0 1.0 0.0 " />
+    # <xform linear="1" weight="1" color="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 0.0 0.0 0.0 " />
+    # <xform linear="1" weight="1" color="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 0.0 0.0 0.0 " />
+    # <xform linear="1" weight="1" color="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" chaos="1.0 0.0 0.0 " />
+    # <finalxform linear="1" color="0" color_speed="0" coefs="1.0 -0.0 -0.0 1.0 0.0 -0.0" />
     def setUp(self):
         self.flame = Flame(flame_str)
 
     def test_len(self):
         for x in self.flame.xform:
-                self.assertEquals(len(x.chaos), 4)
+            self.assertEqual(len(x.chaos), 4)
 
     def test_iter(self):
-        self.assertEquals(list(self.flame.xform[0].chaos), [1.0, 1.0, 1.0, 0.0])
-        self.assertEquals(list(self.flame.xform[1].chaos), [1.0, 0.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[2].chaos), [1.0, 0.0, 0.0, 0.0])
-        self.assertEquals(list(self.flame.xform[3].chaos), [1.0, 0.0, 0.0, 1.0])
+        self.assertEqual(list(self.flame.xform[0].chaos), [1.0, 1.0, 1.0, 0.0])
+        self.assertEqual(list(self.flame.xform[1].chaos), [1.0, 0.0, 0.0, 0.0])
+        self.assertEqual(list(self.flame.xform[2].chaos), [1.0, 0.0, 0.0, 0.0])
+        self.assertEqual(list(self.flame.xform[3].chaos), [1.0, 0.0, 0.0, 1.0])
 
     def test_getitem(self):
         x = self.flame.xform[3]
 
-        self.assertEquals(x.chaos[0], 1.0)
-        self.assertEquals(x.chaos[1], 0.0)
-        self.assertEquals(x.chaos[2], 0.0)
-        self.assertEquals(x.chaos[3], 1.0)
+        self.assertEqual(x.chaos[0], 1.0)
+        self.assertEqual(x.chaos[1], 0.0)
+        self.assertEqual(x.chaos[2], 0.0)
+        self.assertEqual(x.chaos[3], 1.0)
 
-        self.assertEquals(x.chaos[-4], 1.0)
-        self.assertEquals(x.chaos[-3], 0.0)
-        self.assertEquals(x.chaos[-2], 0.0)
-        self.assertEquals(x.chaos[-1], 1.0)
+        self.assertEqual(x.chaos[-4], 1.0)
+        self.assertEqual(x.chaos[-3], 0.0)
+        self.assertEqual(x.chaos[-2], 0.0)
+        self.assertEqual(x.chaos[-1], 1.0)
 
-        self.assertRaises(IndexError, 
-                lambda: operator.getitem(x.chaos, 4))
+        self.assertRaises(IndexError, lambda: operator.getitem(x.chaos, 4))
 
-        self.assertRaises(IndexError, 
-                lambda: operator.getitem(x.chaos, -5))
+        self.assertRaises(IndexError, lambda: operator.getitem(x.chaos, -5))
 
-        self.assertEquals(x.chaos[:], [1.0, 0.0, 0.0, 1.0])
-        self.assertEquals(x.chaos[2:], [0.0, 1.0])
-        self.assertEquals(x.chaos[:2], [1.0, 0.0])
-        self.assertEquals(x.chaos[::3], [1.0, 1.0])
+        self.assertEqual(x.chaos[:], [1.0, 0.0, 0.0, 1.0])
+        self.assertEqual(x.chaos[2:], [0.0, 1.0])
+        self.assertEqual(x.chaos[:2], [1.0, 0.0])
+        self.assertEqual(x.chaos[::3], [1.0, 1.0])
 
     def test_setitem(self):
         x = self.flame.xform[3]
 
-        self.assertEquals(x.chaos[0], 1.0)
-        self.assertEquals(x.chaos[1], 0.0)
-        self.assertEquals(x.chaos[2], 0.0)
-        self.assertEquals(x.chaos[3], 1.0)
+        self.assertEqual(x.chaos[0], 1.0)
+        self.assertEqual(x.chaos[1], 0.0)
+        self.assertEqual(x.chaos[2], 0.0)
+        self.assertEqual(x.chaos[3], 1.0)
 
-        self.assertEquals(x.chaos[-4], 1.0)
-        self.assertEquals(x.chaos[-3], 0.0)
-        self.assertEquals(x.chaos[-2], 0.0)
-        self.assertEquals(x.chaos[-1], 1.0)
+        self.assertEqual(x.chaos[-4], 1.0)
+        self.assertEqual(x.chaos[-3], 0.0)
+        self.assertEqual(x.chaos[-2], 0.0)
+        self.assertEqual(x.chaos[-1], 1.0)
 
         x.chaos[0] = 2.0
-        self.assertEquals(x.chaos[0], 2.0)
+        self.assertEqual(x.chaos[0], 2.0)
         x.chaos[1] = 3.0
-        self.assertEquals(x.chaos[1], 3.0)
-        self.assertEquals(x.chaos[0], 2.0)
+        self.assertEqual(x.chaos[1], 3.0)
+        self.assertEqual(x.chaos[0], 2.0)
         x.chaos[0] = 1.0
         x.chaos[1] = 0.0
         x.chaos[2] = 2.0
         x.chaos[3] = 3.0
-        self.assertEquals(x.chaos[-1], 3.0)
-        self.assertEquals(x.chaos[-2], 2.0)
+        self.assertEqual(x.chaos[-1], 3.0)
+        self.assertEqual(x.chaos[-2], 2.0)
         x.chaos[2] = 0.0
         x.chaos[3] = 1.0
 
-        self.assertRaises(IndexError, 
-                lambda: operator.setitem(x.chaos, 4, 0))
+        self.assertRaises(IndexError, lambda: operator.setitem(x.chaos, 4, 0))
 
-        self.assertRaises(IndexError, 
-                lambda: operator.setitem(x.chaos, -5, 0))
-
+        self.assertRaises(IndexError, lambda: operator.setitem(x.chaos, -5, 0))
 
         x.chaos[1:] = [2.0, 3.0, 4.0]
-        self.assertEquals(x.chaos[:], [1.0, 2.0, 3.0, 4.0])
+        self.assertEqual(x.chaos[:], [1.0, 2.0, 3.0, 4.0])
 
         x.chaos[:2] = [5.0, 6.0]
-        self.assertEquals(x.chaos[:], [5.0, 6.0, 3.0, 4.0])
+        self.assertEqual(x.chaos[:], [5.0, 6.0, 3.0, 4.0])
 
         x.chaos[::2] = [8.0, 9.0]
-        self.assertEquals(x.chaos[:], [8.0, 6.0, 9.0, 4.0])
+        self.assertEqual(x.chaos[:], [8.0, 6.0, 9.0, 4.0])
 
         x.chaos[:] = [1.0, 0.0, 0.0, 1.0]
-        self.assertEquals(x.chaos[:], [1.0, 0.0, 0.0, 1.0])
+        self.assertEqual(x.chaos[:], [1.0, 0.0, 0.0, 1.0])
 
     def test_to_string(self):
-        self.assertEquals(self.flame.xform[0].chaos.to_string(), 'chaos="1.0 1.0 1.0 0.0 " ')
-        self.assertEquals(self.flame.xform[1].chaos.to_string(), 'chaos="1.0 0.0 0.0 0.0 " ')
-        self.assertEquals(self.flame.xform[2].chaos.to_string(), 'chaos="1.0 0.0 0.0 0.0 " ')
-        self.assertEquals(self.flame.xform[3].chaos.to_string(), 'chaos="1.0 0.0 0.0 " ')
+        self.assertEqual(
+            self.flame.xform[0].chaos.to_string(), 'chaos="1.0 1.0 1.0 0.0 " '
+        )
+        self.assertEqual(
+            self.flame.xform[1].chaos.to_string(), 'chaos="1.0 0.0 0.0 0.0 " '
+        )
+        self.assertEqual(
+            self.flame.xform[2].chaos.to_string(), 'chaos="1.0 0.0 0.0 0.0 " '
+        )
+        self.assertEqual(self.flame.xform[3].chaos.to_string(), 'chaos="1.0 0.0 0.0 " ')
 
     def test_repr(self):
-        self.assertEquals(repr(self.flame.xform[0].chaos), 'Chaos([1.0, 1.0, 1.0, 0.0])')
-        self.assertEquals(repr(self.flame.xform[1].chaos), 'Chaos([1.0, 0.0, 0.0, 0.0])')
-        self.assertEquals(repr(self.flame.xform[2].chaos), 'Chaos([1.0, 0.0, 0.0, 0.0])')
-        self.assertEquals(repr(self.flame.xform[3].chaos), 'Chaos([1.0, 0.0, 0.0, 1.0])')
-
+        self.assertEqual(repr(self.flame.xform[0].chaos), "Chaos([1.0, 1.0, 1.0, 0.0])")
+        self.assertEqual(repr(self.flame.xform[1].chaos), "Chaos([1.0, 0.0, 0.0, 0.0])")
+        self.assertEqual(repr(self.flame.xform[2].chaos), "Chaos([1.0, 0.0, 0.0, 0.0])")
+        self.assertEqual(repr(self.flame.xform[3].chaos), "Chaos([1.0, 0.0, 0.0, 1.0])")

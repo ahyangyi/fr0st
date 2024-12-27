@@ -25,7 +25,7 @@ from distutils.command import build_ext
 import py2exe
 from py2exe.build_exe import py2exe
 import os, sys, glob, shutil
-import _winreg
+import winreg
 
 import fr0stlib
 
@@ -33,8 +33,8 @@ VERSION = fr0stlib.VERSION.split()[1]
 
 
 if len(sys.argv) == 1:
-    sys.argv.append('py2exe') # If not specified, build the installer
-    sys.argv.append('-q') # quiet mode
+    sys.argv.append("py2exe")  # If not specified, build the installer
+    sys.argv.append("-q")  # quiet mode
 
 
 # Remove build and dist folders
@@ -42,8 +42,7 @@ shutil.rmtree("build", ignore_errors=True)
 shutil.rmtree("dist", ignore_errors=True)
 
 
-
-fr0st_package_name = 'fr0stlib'
+fr0st_package_name = "fr0stlib"
 
 
 ###########################################################################
@@ -60,8 +59,17 @@ sys.path.append(VC_REDIST_DIR)
 ###########################################################################
 #  And some InnoSetup stuff
 
+
 class InnoScript:
-    def __init__(self, name, lib_dir, dist_dir, windows_exe_files=[], lib_files=[], version=VERSION):
+    def __init__(
+        self,
+        name,
+        lib_dir,
+        dist_dir,
+        windows_exe_files=[],
+        lib_files=[],
+        version=VERSION,
+    ):
         self.lib_dir = lib_dir
         self.dist_dir = dist_dir
         if not self.dist_dir[-1] in "\\/":
@@ -73,119 +81,187 @@ class InnoScript:
 
     def chop(self, pathname):
         assert pathname.startswith(self.dist_dir)
-        return pathname[len(self.dist_dir):]
-    
+        return pathname[len(self.dist_dir) :]
+
     def create(self, pathname="dist\\test_wx.iss"):
         self.pathname = pathname
         ofi = self.file = open(pathname, "w")
-        print >> ofi, "; WARNING: This script has been created by py2exe. Changes to this script"
-        print >> ofi, "; will be overwritten the next time py2exe is run!"
-        print >> ofi, r"[Setup]"
-        print >> ofi, r"AppName=%s" % self.name
-        print >> ofi, r"AppVerName=%s %s" % (self.name, self.version)
-        print >> ofi, r"DefaultDirName={pf}\%s" % self.name
-        print >> ofi, r"DefaultGroupName=%s" % self.name
-        print >> ofi, r"Compression=lzma/ultra64"
-        print >> ofi, r"LicenseFile=license.txt"
-        print >> ofi
+        print(
+            "; WARNING: This script has been created by py2exe. Changes to this script",
+            file=ofi,
+        )
+        print("; will be overwritten the next time py2exe is run!", file=ofi)
+        print(r"[Setup]", file=ofi)
+        print(r"AppName=%s" % self.name, file=ofi)
+        print(r"AppVerName=%s %s" % (self.name, self.version), file=ofi)
+        print(r"DefaultDirName={pf}\%s" % self.name, file=ofi)
+        print(r"DefaultGroupName=%s" % self.name, file=ofi)
+        print(r"Compression=lzma/ultra64", file=ofi)
+        print(r"LicenseFile=license.txt", file=ofi)
+        print(file=ofi)
 
-        print >> ofi, r"[Files]"
-        print self.windows_exe_files + self.lib_files
+        print(r"[Files]", file=ofi)
+        print(self.windows_exe_files + self.lib_files)
         for path in self.windows_exe_files + self.lib_files:
-            print >> ofi, r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion' % (path, os.path.dirname(path))
-        print >> ofi
+            print(
+                r'Source: "%s"; DestDir: "{app}\%s"; Flags: ignoreversion'
+                % (path, os.path.dirname(path)),
+                file=ofi,
+            )
+        print(file=ofi)
 
-        print >> ofi, r"[Icons]"
+        print(r"[Icons]", file=ofi)
         for path in self.windows_exe_files:
-            print >> ofi, r'Name: "{group}\%s"; Filename: "{app}\%s"; WorkingDir: "{app}"' % \
-                  (self.name, path)
-        print >> ofi, 'Name: "{group}\Uninstall %s"; Filename: "{uninstallexe}"' % self.name
+            print(
+                r'Name: "{group}\%s"; Filename: "{app}\%s"; WorkingDir: "{app}"'
+                % (self.name, path),
+                file=ofi,
+            )
+        print(
+            'Name: "{group}\\Uninstall %s"; Filename: "{uninstallexe}"' % self.name,
+            file=ofi,
+        )
 
     def compile(self):
         import ctypes
-        res = ctypes.windll.shell32.ShellExecuteA(0, "compile",
-                                                  self.pathname,
-                                                  None,
-                                                  None,
-                                                  0)
+
+        res = ctypes.windll.shell32.ShellExecuteA(
+            0, "compile", self.pathname, None, None, 0
+        )
         if res < 32:
-            raise RuntimeError, "ShellExecute failed, error %d" % res
+            raise RuntimeError("ShellExecute failed, error %d" % res)
+
 
 ###########################################################################
 #  get py2exe to build the installer
 
+
 class build_exe_plus_installer(py2exe):
     def run(self):
         py2exe.run(self)
-        
-        # create the Installer, using the files py2exe has created.
-        script = InnoScript("Fractal Fr0st",
-                            self.lib_dir,
-                            self.dist_dir,
-                            self.windows_exe_files + self.console_exe_files,
-                            self.lib_files)
 
-        print "*** creating the inno setup script***"
+        # create the Installer, using the files py2exe has created.
+        script = InnoScript(
+            "Fractal Fr0st",
+            self.lib_dir,
+            self.dist_dir,
+            self.windows_exe_files + self.console_exe_files,
+            self.lib_files,
+        )
+
+        print("*** creating the inno setup script***")
         script.create()
-        print "*** compiling the inno setup script***"
+        print("*** compiling the inno setup script***")
         script.compile()
+
 
 ###########################################################################
 #  Now define all the py2exe stuff...
 
-class Target(object):
-    """ A simple class that holds information on our executable file. """
-    def __init__(self, **kw):
-        """ Default class constructor. Update as you need. """
-        self.__dict__.update(kw)
-        
 
-data_files = [('', ['license.txt', 'changelog.txt']
-               + glob.glob(fr0st_package_name + '/pyflam3/win32_dlls/*.dll')),
-              ('icons/toolbar', glob.glob('icons/toolbar/*.png')),
-              ('icons/xformtab', glob.glob('icons/xformtab/*.png')),
-              ('icons', ['icons/fr0st.png', 'icons/fr0st.ico']),
-              ('samples/parameters', glob.glob('samples/parameters/*.flame')),
-              ('samples/scripts/sheep_tools', glob.glob('samples/scripts/sheep_tools/*.py')),
-              ('samples/scripts/batches', glob.glob('samples/scripts/batches/*.py')),
-              ('samples/scripts', glob.glob('samples/scripts/*.py')),
-              ('Microsoft.VC90.CRT', glob.glob(VC_REDIST_DIR + '\\*')),
-             ]
+class Target(object):
+    """A simple class that holds information on our executable file."""
+
+    def __init__(self, **kw):
+        """Default class constructor. Update as you need."""
+        self.__dict__.update(kw)
+
+
+data_files = [
+    (
+        "",
+        ["license.txt", "changelog.txt"]
+        + glob.glob(fr0st_package_name + "/pyflam3/win32_dlls/*.dll"),
+    ),
+    ("icons/toolbar", glob.glob("icons/toolbar/*.png")),
+    ("icons/xformtab", glob.glob("icons/xformtab/*.png")),
+    ("icons", ["icons/fr0st.png", "icons/fr0st.ico"]),
+    ("samples/parameters", glob.glob("samples/parameters/*.flame")),
+    ("samples/scripts/sheep_tools", glob.glob("samples/scripts/sheep_tools/*.py")),
+    ("samples/scripts/batches", glob.glob("samples/scripts/batches/*.py")),
+    ("samples/scripts", glob.glob("samples/scripts/*.py")),
+    ("Microsoft.VC90.CRT", glob.glob(VC_REDIST_DIR + "\\*")),
+]
 
 includes = [
-        'xml',
-        'xml.etree',
-        'xml.etree.ElementTree', 
-        'xml.etree.cElementTree', 
-        'pyexpat',
-        'hashlib',
-        ]
+    "xml",
+    "xml.etree",
+    "xml.etree.ElementTree",
+    "xml.etree.cElementTree",
+    "pyexpat",
+    "hashlib",
+]
 
 excludes = [
-    'BaseHTTPServer', 'ConfigParser', 'Queue',
-    'SocketServer', 'Tkconstants', 'Tkinter',
-    '_gtkagg', '_socket', '_ssl', '_tkagg',
-    'base64', 'bdb', 'bsddb', 'bz2',
-    'cPickle', 'calendar', 'cmd', 'compiler', 'cookielib',
-    'ctypes.util', 'curses', 'datetime',
-    'doctest', 'email', 'multiprocessing',
-    'numpy.core._dotblas', 'numpy.numarray', 'numpy.numarray.util',
-    'numpy.random', 'optparse', 'parser', 'pdb', 'pkgutil', 
-    'pydoc', 'pyreadline', 'pywin.debugger',
-    'pywin.debugger.dbgcon', 'pywin.dialogs', 'readline', 'rfc822',
-    'select', 'sets', 'shlex', 'signal', 'socket', 'ssl', 'subprocess',
-    'symbol', 'symtable', 'tcl', 'textwrap', 'tty', 'uu',
-    'webbrowser', 'xmlrpclib', 'zipfile', 'zipimport',
+    "BaseHTTPServer",
+    "ConfigParser",
+    "Queue",
+    "SocketServer",
+    "Tkconstants",
+    "Tkinter",
+    "_gtkagg",
+    "_socket",
+    "_ssl",
+    "_tkagg",
+    "base64",
+    "bdb",
+    "bsddb",
+    "bz2",
+    "cPickle",
+    "calendar",
+    "cmd",
+    "compiler",
+    "cookielib",
+    "ctypes.util",
+    "curses",
+    "datetime",
+    "doctest",
+    "email",
+    "multiprocessing",
+    "numpy.core._dotblas",
+    "numpy.numarray",
+    "numpy.numarray.util",
+    "numpy.random",
+    "optparse",
+    "parser",
+    "pdb",
+    "pkgutil",
+    "pydoc",
+    "pyreadline",
+    "pywin.debugger",
+    "pywin.debugger.dbgcon",
+    "pywin.dialogs",
+    "readline",
+    "rfc822",
+    "select",
+    "sets",
+    "shlex",
+    "signal",
+    "socket",
+    "ssl",
+    "subprocess",
+    "symbol",
+    "symtable",
+    "tcl",
+    "textwrap",
+    "tty",
+    "uu",
+    "webbrowser",
+    "xmlrpclib",
+    "zipfile",
+    "zipimport",
 ]
 
 packages = [fr0st_package_name]
 
 dll_excludes = [
-    'libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll',
-    'tcl84.dll', 'tk84.dll',
+    "libgdk-win32-2.0-0.dll",
+    "libgobject-2.0-0.dll",
+    "tcl84.dll",
+    "tk84.dll",
 ]
 
-manifest = '''
+manifest = """
 <assembly xmlns="urn:schemas-microsoft-com:asm.v1"
 manifestVersion="1.0">
   <assemblyIdentity
@@ -229,43 +305,45 @@ manifestVersion="1.0">
     </dependentAssembly>
   </dependency>
 </assembly>
-'''.format(name="fr0st")
+""".format(
+    name="fr0st"
+)
 
 fr0st_target = Target(
     # what to build
-    script = "fr0st.py",
-    icon_resources = [(1, 'icons/fr0st.ico')],
-    bitmap_resources = [],
-    other_resources = [(24, 1, manifest)],
-##    other_resources = [],
-    dest_base = "fr0st",    
-    version = "1.0",
-    name = "fr0st"
-    )
+    script="fr0st.py",
+    icon_resources=[(1, "icons/fr0st.ico")],
+    bitmap_resources=[],
+    other_resources=[(24, 1, manifest)],
+    ##    other_resources = [],
+    dest_base="fr0st",
+    version="1.0",
+    name="fr0st",
+)
 
 
 ###########################################################################
 #  Finally, hand it off to distutils
 
 setup(
-
-    data_files = data_files,
-
-    options = {"py2exe": {"compressed": 1, 
-                          "optimize": 0,
-                          "includes": includes,
-                          "excludes": excludes,
-                          "packages": packages,
-                          "dll_excludes": dll_excludes,
-                          "bundle_files": 2,
-                          "dist_dir": "dist",
-                          #"xref": True,
-                          "skip_archive": False,
-                          "custom_boot_script": '',
-                         }
-              },
-    zipfile = None,
-    console = [],
-    windows = [fr0st_target],
-    cmdclass = {"py2exe": build_exe_plus_installer},
+    data_files=data_files,
+    options={
+        "py2exe": {
+            "compressed": 1,
+            "optimize": 0,
+            "includes": includes,
+            "excludes": excludes,
+            "packages": packages,
+            "dll_excludes": dll_excludes,
+            "bundle_files": 2,
+            "dist_dir": "dist",
+            # "xref": True,
+            "skip_archive": False,
+            "custom_boot_script": "",
+        }
+    },
+    zipfile=None,
+    console=[],
+    windows=[fr0st_target],
+    cmdclass={"py2exe": build_exe_plus_installer},
 )

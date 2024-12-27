@@ -43,4 +43,3 @@ flam3_intspace_log = 1
 
 flam3_RANDSIZL = 4
 flam3_RANDSIZ = 1 << flam3_RANDSIZL
-

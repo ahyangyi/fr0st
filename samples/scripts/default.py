@@ -1,4 +1,3 @@
-
 update_flame = False
 
 while True:

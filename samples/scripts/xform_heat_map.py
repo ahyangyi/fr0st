@@ -10,12 +10,12 @@ from fr0stlib.gui.canvas import XformCanvas
 
 # Divide gradient into 8 blocks.
 for i, color in enumerate(XformCanvas.colors):
-    flame.gradient[i*32:i*32+32] = [color] * 32
+    flame.gradient[i * 32 : i * 32 + 32] = [color] * 32
 
 # Set xform colors so they fall into their respective blocks.
 for x in flame.xform:
     x.color_speed = 1
-    x.color = 1/16. + x.index % 8 / 8.
+    x.color = 1 / 16.0 + x.index % 8 / 8.0
 
 
 preview()
@@ -24,4 +24,3 @@ update_flame = False
 dialog("Keep Changes?")
 # If user clicked cancel, execution never gets past this point.
 update_flame = True
-

@@ -33,81 +33,92 @@ def load_config(path):
 
 
 def dump_config(path):
-    with open(path, 'w') as f:
+    with open(path, "w") as f:
         f.write(pprint.pformat(config))
 
 
 def update_dict(old, new):
-    for k,v in new.iteritems():
+    for k, v in list(new.items()):
         if k not in old:
             continue
-        if type(v) == dict:
+        if isinstance(v, dict):
             update_dict(old[k], v)
         else:
             old[k] = v
 
+
 config = {}
 original_config = {}
 
+
 def init_config(path):
     config.update(
-         {"flamepath" : os.path.join(wx.GetApp().UserParametersDir,
-                                     "samples.flame"),
-          "Lock-Axes" : True,
-          "World-Pivot": False,
-          "Variation-Preview": True,
-          "Edit-Post-Xform": False,
-          "Xform-Preview-Settings": {"range": 2,
-                                     "numvals": 10,
-                                     "depth": 3},
-          "Preview-Settings": {"quality": 5,
-                               "estimator": 0,
-                               "filter_radius": 0,
-                               "spatial_oversample": 1},
-          "Large-Preview-Settings": {"quality": 25,
-                                     "estimator": 0,
-                                     "filter_radius": 0.25,
-                                     "spatial_oversample": 2},
-          "Render-Settings": {"quality": 500,
-                              "filter_radius": 0.5,
-                              "spatial_oversample": 2,
-                              "estimator": 9,
-                              "estimator_curve": 0.4,
-                              "estimator_minimum": 0,
-                              "nthreads": 0,
-                              "buffer_depth": 64,
-                              "earlyclip": True,
-                              "transparent": False,
-                              "filter_kernel": 0},
-          "Gradient-Settings": {"hue": (0, 1),
-                                "saturation": (0, 1),
-                                "value": (.25, 1),
-                                "nodes": (4, 6)},
-          "Img-Dir": wx.GetApp().RendersDir,
-          "Img-Type": ".png",
-          "jpg-quality": 95,
-          "Bits": 0,
-          "renderer": "flam3",
-          "Rect-Main": None,
-          "Rect-Editor": None,
-          "Rect-Preview": None,
-          "Recent-Flames": (),
-          "Recent-Scripts": (),
-          "Favorite-Scripts": [os.path.join(wx.GetApp().UserScriptsDir, i)
-                               for i in ('reframe.py',
-                                         'calculate_colors.py',
-                                         'bilateral_symmetry.py',
-                                         'xform_heat_map.py')
-                               ] + ['None' for i in range(8)],
-          "Xform-Combo": {"rotate": 15.0,
-                          "scale": 1.25,
-                          "translate": 0.1},
-          "version": "Fr0st 0.0",
-          })
+        {
+            "flamepath": os.path.join(wx.GetApp().UserParametersDir, "samples.flame"),
+            "Lock-Axes": True,
+            "World-Pivot": False,
+            "Variation-Preview": True,
+            "Edit-Post-Xform": False,
+            "Xform-Preview-Settings": {"range": 2, "numvals": 10, "depth": 3},
+            "Preview-Settings": {
+                "quality": 5,
+                "estimator": 0,
+                "filter_radius": 0,
+                "spatial_oversample": 1,
+            },
+            "Large-Preview-Settings": {
+                "quality": 25,
+                "estimator": 0,
+                "filter_radius": 0.25,
+                "spatial_oversample": 2,
+            },
+            "Render-Settings": {
+                "quality": 500,
+                "filter_radius": 0.5,
+                "spatial_oversample": 2,
+                "estimator": 9,
+                "estimator_curve": 0.4,
+                "estimator_minimum": 0,
+                "nthreads": 0,
+                "buffer_depth": 64,
+                "earlyclip": True,
+                "transparent": False,
+                "filter_kernel": 0,
+            },
+            "Gradient-Settings": {
+                "hue": (0, 1),
+                "saturation": (0, 1),
+                "value": (0.25, 1),
+                "nodes": (4, 6),
+            },
+            "Img-Dir": wx.GetApp().RendersDir,
+            "Img-Type": ".png",
+            "jpg-quality": 95,
+            "Bits": 0,
+            "renderer": "flam3",
+            "Rect-Main": None,
+            "Rect-Editor": None,
+            "Rect-Preview": None,
+            "Recent-Flames": (),
+            "Recent-Scripts": (),
+            "Favorite-Scripts": [
+                os.path.join(wx.GetApp().UserScriptsDir, i)
+                for i in (
+                    "reframe.py",
+                    "calculate_colors.py",
+                    "bilateral_symmetry.py",
+                    "xform_heat_map.py",
+                )
+            ]
+            + ["None" for i in range(8)],
+            "Xform-Combo": {"rotate": 15.0, "scale": 1.25, "translate": 0.1},
+            "version": "Fr0st 0.0",
+        }
+    )
 
     # Make a copy of default values, so they can be restored later.
     original_config.update(config)
-    
+
     if os.path.exists(path):
         update_dict(config, load_config(path))
 
@@ -118,10 +129,10 @@ def init_config(path):
 
     # HACK: Edit-Post-Xform doesn't really belong in the config dict, and we
     # don't want to keep its value between sessions.
-    config['Edit-Post-Xform'] = False
+    config["Edit-Post-Xform"] = False
 
     # Make sure no illegal renderer is selected.
-    if config['renderer'] == 'flam4' and not is_cuda_capable():
-        config['renderer'] = 'flam3'
+    if config["renderer"] == "flam4" and not is_cuda_capable():
+        config["renderer"] = "flam3"
 
     atexit.register(functools.partial(dump_config, path=path))

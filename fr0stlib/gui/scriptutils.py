@@ -21,14 +21,16 @@
 ##############################################################################
 import wx
 
-from  wx.lib.filebrowsebutton import FileBrowseButton
+from wx.lib.filebrowsebutton import FileBrowseButton
+
 
 class DynamicDialog(wx.Dialog):
     """A dialog class used for interactive script input."""
+
     def __init__(self, parent, title, intro, *args):
         wx.Dialog.__init__(self, parent)
         self.Title = title
-        szrgs = 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5
+        szrgs = 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5
         fgs = wx.FlexGridSizer(99, 2, 1, 1)
 
         self.widgets = []
@@ -50,16 +52,15 @@ class DynamicDialog(wx.Dialog):
         btnsizer.Realize()
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add((0,10))
+        sizer.Add((0, 10))
         sizer.Add(introtext, *szrgs)
-        sizer.Add((0,10))
+        sizer.Add((0, 10))
         sizer.Add(fgs)
         sizer.Add(btnsizer, 0, wx.ALIGN_CENTER)
 
-        self.SetMinSize((250,1))
+        self.SetMinSize((250, 1))
         self.SetSizer(sizer)
         sizer.Fit(self)
-
 
     def AddWidget(self, name, ty, default=None):
         if ty == bool:
@@ -67,15 +68,15 @@ class DynamicDialog(wx.Dialog):
             if default:
                 widget.SetValue(True)
         elif ty == file:
-            widget = FileBrowseButton(self, -1, labelText='',
-                                      initialValue=default or "")
+            widget = FileBrowseButton(
+                self, -1, labelText="", initialValue=default or ""
+            )
             widget.SetMinSize((300, widget.GetSize()[1]))
         elif type(ty) in (list, tuple):
             widget = ValidChoice(self, choices=ty, default=default or 0)
         else:
             widget = ValidTextCtrl(self, ty, default)
-        return wx.StaticText(self, -1, name), widget      
-
+        return wx.StaticText(self, -1, name), widget
 
 
 class ValidTextCtrl(wx.TextCtrl):
@@ -87,19 +88,18 @@ class ValidTextCtrl(wx.TextCtrl):
         self.default = default
         self.SetMinSize((200 if type_ is str else 100, 27))
 
-        
     def GetValue(self):
         val = wx.TextCtrl.GetValue(self)
         try:
             return self.type(val)
         except Exception:
-            raise ValueError("Invalid input for %s: %s" %(self.type, val))
+            raise ValueError("Invalid input for %s: %s" % (self.type, val))
 
 
 class ValidChoice(wx.Choice):
     def __init__(self, parent, choices, default=0):
         self.choices = choices
-        wx.Choice.__init__(self, parent, -1, choices=map(str, choices))
+        wx.Choice.__init__(self, parent, -1, choices=list(map(str, choices)))
         self.index = default
         self.SetSelection(default)
         self.Bind(wx.EVT_CHOICE, self.OnChoice)
@@ -109,4 +109,3 @@ class ValidChoice(wx.Choice):
 
     def OnChoice(self, e):
         self.index = e.GetInt()
-        
